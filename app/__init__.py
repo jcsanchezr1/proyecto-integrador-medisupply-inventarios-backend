@@ -32,3 +32,4 @@ def configure_routes(app):
     
     # Health check endpoint
     api.add_resource(HealthCheckView, '/inventory/ping')
+

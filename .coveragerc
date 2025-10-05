@@ -1,4 +1,4 @@
-9[run]
+[run]
 source = app
 omit = 
     */tests/*
@@ -15,8 +15,6 @@ exclude_lines =
     def create\(self\):
     def get_by_id\(self\):
     def get_all\(self\):
-    def get_by_email\(self\):
-    def validate_business_rules\(self\):
     
     # Código de logging/debugging
     logger\.
@@ -46,3 +44,4 @@ exclude_lines =
 
 [html]
 directory = htmlcov
+

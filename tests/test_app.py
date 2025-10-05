@@ -19,3 +19,4 @@ class TestAppCreation:
         app = create_app()
         rules = [rule.rule for rule in app.url_map.iter_rules()]
         assert '/inventory/ping' in rules
+

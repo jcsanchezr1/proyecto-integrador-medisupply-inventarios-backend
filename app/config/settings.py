@@ -36,3 +36,4 @@ def get_config():
         return ProductionConfig()
     else:
         return DevelopmentConfig()
+

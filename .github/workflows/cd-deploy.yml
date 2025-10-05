@@ -82,3 +82,4 @@ jobs:
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} --region=${{ env.GCP_REGION }} --format="value(status.url)")
           echo "Service deployed at: $SERVICE_URL"
           echo "Health check: $SERVICE_URL/inventory/ping"
+

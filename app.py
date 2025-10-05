@@ -17,3 +17,4 @@ if __name__ == '__main__':
     print(f"Debug mode: {debug}")
     
     app.run(host=host, port=port, debug=debug)
+

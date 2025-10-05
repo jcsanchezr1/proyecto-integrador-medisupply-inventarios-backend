@@ -20,3 +20,4 @@ ENV FLASK_APP=app.py
 
 # Comando por defecto
 CMD ["python", "app.py"]
+

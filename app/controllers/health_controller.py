@@ -12,3 +12,4 @@ class HealthCheckView(Resource):
         Usado para verificar el estado del servicio.
         """
         return "pong", 200
+
