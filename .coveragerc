@@ -1,0 +1,48 @@
+9[run]
+source = app
+omit = 
+    */tests/*
+    */venv/*
+    */env/*
+    */__pycache__/*
+    */migrations/*
+
+[report]
+exclude_lines =
+    # Métodos abstractos que no se pueden instanciar
+    def to_dict\(self\):
+    def validate\(self\):
+    def create\(self\):
+    def get_by_id\(self\):
+    def get_all\(self\):
+    def get_by_email\(self\):
+    def validate_business_rules\(self\):
+    
+    # Código de logging/debugging
+    logger\.
+    print\(
+    traceback\.
+    
+    # Código de manejo de excepciones específicas
+    except.*:
+        pass
+    except.*:
+        raise
+    
+    # Código de inicialización de clases abstractas
+    if hasattr\(self, key\):
+        setattr\(self, key, value\)
+    
+    # Métodos de representación
+    def __repr__\(self\):
+    
+    # Código de configuración que no se ejecuta en tests
+    if.*config.*:
+        pass
+    
+    # Código de manejo de archivos que es difícil de alcanzar
+    if.*file.*:
+        pass
+
+[html]
+directory = htmlcov
