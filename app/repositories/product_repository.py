@@ -1,11 +1,38 @@
+"""
+Repositorio de Productos - Implementación con SQLAlchemy
+"""
 from typing import List, Optional
-from app.models.product import Product
-from app.repositories.base_repository import BaseRepository
+from sqlalchemy import create_engine, Column, String, DateTime, Text, Integer, Float
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
+import uuid
 
-# Variables de clase a nivel de módulo para mantener estado entre instancias
-_products_db = {}  # {sku: Product}
-_products_by_id = {}  # {id: Product}
-_next_id = 1
+from .base_repository import BaseRepository
+from ..models.product import Product
+from ..config.settings import Config
+
+# Configuración de SQLAlchemy
+Base = declarative_base()
+
+
+class ProductDB(Base):
+    """Modelo de base de datos para productos"""
+    __tablename__ = 'products'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sku = Column(String(20), nullable=False, unique=True)
+    name = Column(String(255), nullable=False)
+    expiration_date = Column(DateTime, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
+    location = Column(String(20), nullable=False)
+    description = Column(Text, nullable=True)
+    product_type = Column(String(50), nullable=False)
+    photo_filename = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class ProductRepository(BaseRepository):
@@ -14,9 +41,47 @@ class ProductRepository(BaseRepository):
     """
     
     def __init__(self):
-        # Base de datos en memoria para desarrollo/testing
-        # En producción esto sería reemplazado por conexión real a PostgreSQL
-        pass
+        # Configuración de la base de datos
+        self.engine = create_engine(Config.DATABASE_URL)
+        self.Session = sessionmaker(bind=self.engine)
+        
+        # Crear tablas si no existen
+        try:
+            Base.metadata.create_all(self.engine)
+        except Exception as e:
+            print(f"Error creando tablas: {e}")
+    
+    def _get_session(self) -> Session:
+        """Obtiene una sesión de base de datos"""
+        return self.Session()
+    
+    def _db_to_model(self, db_product: ProductDB) -> Product:
+        """Convierte un objeto de base de datos a modelo de dominio"""
+        return Product(
+            sku=db_product.sku,
+            name=db_product.name,
+            expiration_date=db_product.expiration_date.isoformat() if db_product.expiration_date else None,
+            quantity=db_product.quantity,
+            price=db_product.price,
+            location=db_product.location,
+            description=db_product.description,
+            product_type=db_product.product_type,
+            photo_filename=db_product.photo_filename
+        )
+    
+    def _model_to_db(self, product: Product) -> ProductDB:
+        """Convierte un modelo de dominio a objeto de base de datos"""
+        return ProductDB(
+            sku=product.sku,
+            name=product.name,
+            expiration_date=product.expiration_date if isinstance(product.expiration_date, datetime) else datetime.fromisoformat(product.expiration_date.replace('Z', '+00:00')) if product.expiration_date else None,
+            quantity=product.quantity,
+            price=product.price,
+            location=product.location,
+            description=product.description,
+            product_type=product.product_type,
+            photo_filename=product.photo_filename
+        )
     
     def create(self, product: Product) -> Product:
         """
@@ -31,22 +96,27 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
             # Validar que el producto sea válido
             product.validate()
             
-            # Asignar ID único
-            global _next_id
-            product.id = _next_id
-            _next_id += 1
+            # Convertir a objeto de base de datos
+            db_product = self._model_to_db(product)
             
-            # Guardar en base de datos en memoria
-            _products_db[product.sku] = product
-            _products_by_id[product.id] = product
+            # Guardar en base de datos
+            session.add(db_product)
+            session.commit()
+            
+            # Asignar ID al producto original
+            product.id = db_product.id
             
             return product
-        except Exception as e:
+        except SQLAlchemyError as e:
+            session.rollback()
             raise Exception(f"Error al crear producto: {str(e)}")
+        finally:
+            session.close()
     
     def get_by_id(self, product_id: int) -> Optional[Product]:
         """
@@ -61,10 +131,16 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
-            return _products_by_id.get(product_id)
-        except Exception as e:
+            db_product = session.query(ProductDB).filter(ProductDB.id == product_id).first()
+            if db_product:
+                return self._db_to_model(db_product)
+            return None
+        except SQLAlchemyError as e:
             raise Exception(f"Error al obtener producto por ID: {str(e)}")
+        finally:
+            session.close()
     
     def get_by_sku(self, sku: str) -> Optional[Product]:
         """
@@ -79,10 +155,16 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
-            return _products_db.get(sku)
-        except Exception as e:
+            db_product = session.query(ProductDB).filter(ProductDB.sku == sku).first()
+            if db_product:
+                return self._db_to_model(db_product)
+            return None
+        except SQLAlchemyError as e:
             raise Exception(f"Error al obtener producto por SKU: {str(e)}")
+        finally:
+            session.close()
     
     def get_all(self) -> List[Product]:
         """
@@ -94,10 +176,14 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
-            return list(_products_by_id.values())
-        except Exception as e:
+            db_products = session.query(ProductDB).all()
+            return [self._db_to_model(db_product) for db_product in db_products]
+        except SQLAlchemyError as e:
             raise Exception(f"Error al obtener todos los productos: {str(e)}")
+        finally:
+            session.close()
     
     def update(self, product: Product) -> Product:
         """
@@ -112,18 +198,34 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
             # Validar que el producto sea válido
             product.validate()
             
-            # Actualizar en base de datos en memoria
-            if product.id in _products_by_id:
-                _products_by_id[product.id] = product
-                _products_db[product.sku] = product
+            # Buscar el producto existente
+            db_product = session.query(ProductDB).filter(ProductDB.id == product.id).first()
+            if db_product:
+                # Actualizar campos
+                db_product.sku = product.sku
+                db_product.name = product.name
+                db_product.expiration_date = product.expiration_date if isinstance(product.expiration_date, datetime) else datetime.fromisoformat(product.expiration_date.replace('Z', '+00:00')) if product.expiration_date else None
+                db_product.quantity = product.quantity
+                db_product.price = product.price
+                db_product.location = product.location
+                db_product.description = product.description
+                db_product.product_type = product.product_type
+                db_product.photo_filename = product.photo_filename
+                db_product.updated_at = datetime.utcnow()
+                
+                session.commit()
             
             return product
-        except Exception as e:
+        except SQLAlchemyError as e:
+            session.rollback()
             raise Exception(f"Error al actualizar producto: {str(e)}")
+        finally:
+            session.close()
     
     def delete(self, product_id: int) -> bool:
         """
@@ -138,15 +240,19 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
-            if product_id in _products_by_id:
-                product = _products_by_id[product_id]
-                del _products_by_id[product_id]
-                del _products_db[product.sku]
+            db_product = session.query(ProductDB).filter(ProductDB.id == product_id).first()
+            if db_product:
+                session.delete(db_product)
+                session.commit()
                 return True
             return False
-        except Exception as e:
+        except SQLAlchemyError as e:
+            session.rollback()
             raise Exception(f"Error al eliminar producto: {str(e)}")
+        finally:
+            session.close()
     
     def delete_all(self) -> int:
         """
@@ -158,13 +264,17 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
-            count = len(_products_by_id)
-            _products_by_id.clear()
-            _products_db.clear()
+            count = session.query(ProductDB).count()
+            session.query(ProductDB).delete()
+            session.commit()
             return count
-        except Exception as e:
+        except SQLAlchemyError as e:
+            session.rollback()
             raise Exception(f"Error al eliminar todos los productos: {str(e)}")
+        finally:
+            session.close()
     
     def count(self) -> int:
         """
@@ -176,7 +286,10 @@ class ProductRepository(BaseRepository):
         Raises:
             Exception: Si hay error en la base de datos
         """
+        session = self._get_session()
         try:
-            return len(_products_by_id)
-        except Exception as e:
+            return session.query(ProductDB).count()
+        except SQLAlchemyError as e:
             raise Exception(f"Error al contar productos: {str(e)}")
+        finally:
+            session.close()

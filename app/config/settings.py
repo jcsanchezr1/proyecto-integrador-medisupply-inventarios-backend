@@ -16,6 +16,9 @@ class Config:
     # Configuración de la aplicación
     APP_NAME = 'MediSupply Inventory Backend'
     APP_VERSION = '1.0.0'
+    
+    # Configuración de base de datos
+    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://medisupply_local_user:medisupply_local_password@localhost:5432/medisupply_local_db')
 
 
 class DevelopmentConfig(Config):

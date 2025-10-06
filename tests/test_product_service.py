@@ -60,7 +60,7 @@ class TestProductService:
         """Test: Error de validación por datos inválidos"""
         valid_product_data['quantity'] = 'invalid'
         
-        with pytest.raises(ValidationError, match="Error en formato de datos"):
+        with pytest.raises(ValidationError, match="Error en conversión de tipos numéricos"):
             product_service.create_product(valid_product_data)
     
     def test_create_product_business_logic_error_duplicate_sku(self, product_service, mock_repository, valid_product_data):
@@ -276,14 +276,14 @@ class TestProductService:
         """Test: Error al crear instancia con tipo de cantidad inválido"""
         valid_product_data['quantity'] = 'invalid'
         
-        with pytest.raises(ValidationError, match="Error en formato de datos"):
+        with pytest.raises(ValidationError, match="Error en conversión de tipos numéricos"):
             product_service._create_product_instance(valid_product_data)
     
     def test_create_product_instance_invalid_price_type(self, product_service, valid_product_data):
         """Test: Error al crear instancia con tipo de precio inválido"""
         valid_product_data['price'] = 'invalid'
         
-        with pytest.raises(ValidationError, match="Error en formato de datos"):
+        with pytest.raises(ValidationError, match="Error en conversión de tipos numéricos"):
             product_service._create_product_instance(valid_product_data)
     
     def test_validate_business_rules_duplicate_sku(self, product_service, mock_repository):

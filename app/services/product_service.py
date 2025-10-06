@@ -217,24 +217,42 @@ class ProductService:
             ValidationError: Si hay error en la conversión de datos
         """
         try:
-            # Convertir fecha de vencimiento si es string
+            # Convertir todos los tipos de datos antes de crear el objeto
+            sku = str(product_data['sku'])
+            name = str(product_data['name'])
+            
+            # Convertir fecha de vencimiento
             expiration_date = product_data['expiration_date']
             if isinstance(expiration_date, str):
                 try:
                     expiration_date = datetime.fromisoformat(expiration_date.replace('Z', '+00:00'))
                 except ValueError:
                     raise ValidationError("Formato de fecha de vencimiento inválido")
+            elif not isinstance(expiration_date, datetime):
+                raise ValidationError("La fecha de vencimiento debe ser un datetime o string válido")
+            
+            # Convertir cantidad y precio
+            try:
+                quantity = int(product_data['quantity'])
+                price = float(product_data['price'])
+            except (ValueError, TypeError) as e:
+                raise ValidationError(f"Error en conversión de tipos numéricos: {str(e)}")
+            
+            location = str(product_data['location'])
+            description = str(product_data['description'])
+            product_type = str(product_data['product_type'])
+            photo_filename = str(product_data.get('photo_filename')) if product_data.get('photo_filename') else None
             
             return Product(
-                sku=product_data['sku'],
-                name=product_data['name'],
+                sku=sku,
+                name=name,
                 expiration_date=expiration_date,
-                quantity=int(product_data['quantity']),
-                price=float(product_data['price']),
-                location=product_data['location'],
-                description=product_data['description'],
-                product_type=product_data['product_type'],
-                photo_filename=product_data.get('photo_filename')
+                quantity=quantity,
+                price=price,
+                location=location,
+                description=description,
+                product_type=product_type,
+                photo_filename=photo_filename
             )
         except (ValueError, TypeError) as e:
             raise ValidationError(f"Error en formato de datos: {str(e)}")

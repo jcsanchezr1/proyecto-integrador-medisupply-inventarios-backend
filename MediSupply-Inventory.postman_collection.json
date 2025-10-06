@@ -64,7 +64,7 @@
               "    'Omeprazol 20mg',",
               "    'Amoxicilina 500mg',",
               "    'Metformina 850mg',",
-              "    'Losartán 50mg',",
+              "    'Losartan 50mg',",
               "    'Atorvastatina 20mg',",
               "    'Levotiroxina 50mcg',",
               "    'Metoprolol 50mg'",
@@ -91,7 +91,7 @@
               "pm.environment.set('cantidad_valida', cantidad.toString());",
               "pm.environment.set('precio_valido', precio.toString());",
               "pm.environment.set('ubicacion_valida', ubicacion);",
-              "pm.environment.set('descripcion_valida', `Descripción del producto ${nombre}`);",
+              "pm.environment.set('descripcion_valida', `Descripcion del producto ${nombre}`);",
               "pm.environment.set('tipo_valido', tipo);",
               "",
               "console.log('Datos generados:', {",
@@ -379,7 +379,7 @@
               "// Validar mensaje de error específico",
               "pm.test('Error message is about past date', function () {",
               "    const response = pm.response.json();",
-              "    pm.expect(response.details).to.include('fecha de vencimiento');",
+              "    pm.expect(response.details).to.include('fecha de vencimiento debe ser posterior');",
               "});",
               "",
               "console.log('Error de fecha pasada validado correctamente');"
@@ -398,7 +398,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"MED-9999\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Medio valor\"\n}"
+          "raw": "{\n    \"sku\": \"MED-1111\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Medio valor\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -439,7 +439,7 @@
               "    pm.expect(response.details).to.include('cantidad');",
               "});",
               "",
-              "console.log('Error de cantidad inválida validado correctamente');"
+              "console.log('Error de cantidad invalida validado correctamente');"
             ],
             "type": "text/javascript"
           }
@@ -496,7 +496,7 @@
               "    pm.expect(response.details).to.include('ubicación');",
               "});",
               "",
-              "console.log('Error de ubicación inválida validado correctamente');"
+              "console.log('Error de ubicación invalida validado correctamente');"
             ],
             "type": "text/javascript"
           }

@@ -2,6 +2,7 @@
 Tests para la aplicación principal
 """
 import pytest
+from unittest.mock import patch, MagicMock
 from app import create_app
 
 
@@ -36,14 +37,22 @@ class TestAppCreation:
             response = client.get('/inventory/ping')
             assert response.status_code == 200
             
-            # Product endpoints
-            response = client.get('/inventory/products')
-            assert response.status_code == 200
-            
-            # GET producto específico puede retornar 200 o 404 dependiendo de si existe
-            response = client.get('/inventory/products/1')
-            assert response.status_code in [200, 404]
-            
-            response = client.delete('/inventory/products/delete-all')
-            assert response.status_code == 200
+            # Product endpoints - mockear el servicio para evitar conexión a BD
+            with patch('app.controllers.product_controller.ProductService') as mock_service_class:
+                mock_service = MagicMock()
+                mock_service.get_products_summary.return_value = []
+                mock_service.get_product_by_id.return_value = None
+                mock_service.delete_all_products.return_value = 0
+                mock_service_class.return_value = mock_service
+                
+                # Product endpoints
+                response = client.get('/inventory/products')
+                assert response.status_code == 200
+                
+                # GET producto específico puede retornar 200 o 404 dependiendo de si existe
+                response = client.get('/inventory/products/1')
+                assert response.status_code in [200, 404]
+                
+                response = client.delete('/inventory/products/delete-all')
+                assert response.status_code == 200
 
