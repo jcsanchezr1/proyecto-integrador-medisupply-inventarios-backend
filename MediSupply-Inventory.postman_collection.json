@@ -1,0 +1,887 @@
+{
+  "info": {
+    "name": "MediSupply Inventory API - Con Datos Aleatorios",
+    "description": "Colección para validar el servicio de inventarios MediSupply con datos aleatorios generados automáticamente",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar que la respuesta sea 'pong'",
+              "pm.test('Response is pong', function () {",
+              "    const responseText = pm.response.text().trim();",
+              "    pm.expect(responseText).to.eql('\"pong\"');",
+              "});",
+              "",
+              "console.log('Validaciones completadas para health check');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/ping",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "ping"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Datos Válidos",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generar datos aleatorios para el producto",
+              "const skuNumber = Math.floor(Math.random() * 9000) + 1000;",
+              "const sku = `MED-${skuNumber}`;",
+              "",
+              "const nombres = [",
+              "    'Paracetamol 500mg',",
+              "    'Ibuprofeno 400mg',",
+              "    'Aspirina 100mg',",
+              "    'Omeprazol 20mg',",
+              "    'Amoxicilina 500mg',",
+              "    'Metformina 850mg',",
+              "    'Losartán 50mg',",
+              "    'Atorvastatina 20mg',",
+              "    'Levotiroxina 50mcg',",
+              "    'Metoprolol 50mg'",
+              "];",
+              "",
+              "const tipos = ['Alto valor', 'Medio valor', 'Bajo valor'];",
+              "const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
+              "",
+              "const nombre = nombres[Math.floor(Math.random() * nombres.length)];",
+              "const tipo = tipos[Math.floor(Math.random() * tipos.length)];",
+              "const ubicacion = ubicaciones[Math.floor(Math.random() * ubicaciones.length)];",
+              "",
+              "// Generar fecha de vencimiento futura (entre 30 días y 2 años)",
+              "const fechaVencimiento = new Date();",
+              "fechaVencimiento.setDate(fechaVencimiento.getDate() + Math.floor(Math.random() * 700) + 30);",
+              "",
+              "const cantidad = Math.floor(Math.random() * 999) + 1;",
+              "const precio = Math.floor(Math.random() * 50000) + 5000;",
+              "",
+              "// Guardar variables para usar en el request",
+              "pm.environment.set('sku_valido', sku);",
+              "pm.environment.set('nombre_valido', nombre);",
+              "pm.environment.set('fecha_vencimiento_valida', fechaVencimiento.toISOString());",
+              "pm.environment.set('cantidad_valida', cantidad.toString());",
+              "pm.environment.set('precio_valido', precio.toString());",
+              "pm.environment.set('ubicacion_valida', ubicacion);",
+              "pm.environment.set('descripcion_valida', `Descripción del producto ${nombre}`);",
+              "pm.environment.set('tipo_valido', tipo);",
+              "",
+              "console.log('Datos generados:', {",
+              "    sku, nombre, fechaVencimiento: fechaVencimiento.toISOString(),",
+              "    cantidad, precio, ubicacion, tipo",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has success structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('message');",
+              "    pm.expect(response).to.have.property('data');",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "// Validar que el producto fue creado",
+              "pm.test('Product was created successfully', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.message).to.include('registrado exitosamente');",
+              "    pm.expect(response.data).to.have.property('sku');",
+              "    pm.expect(response.data.sku).to.eql(pm.environment.get('sku_valido'));",
+              "});",
+              "",
+              "// Guardar ID del producto para tests posteriores",
+              "pm.test('Save product ID for later tests', function () {",
+              "    const response = pm.response.json();",
+              "    if (response.data && response.data.id) {",
+              "        pm.environment.set('product_id', response.data.id);",
+              "    }",
+              "});",
+              "",
+              "console.log('Producto creado exitosamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"{{sku_valido}}\",\n    \"name\": \"{{nombre_valido}}\",\n    \"expiration_date\": \"{{fecha_vencimiento_valida}}\",\n    \"quantity\": {{cantidad_valida}},\n    \"price\": {{precio_valido}},\n    \"location\": \"{{ubicacion_valida}}\",\n    \"description\": \"{{descripcion_valida}}\",\n    \"product_type\": \"{{tipo_valido}}\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - SKU Duplicado",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Usar el mismo SKU del producto anterior para generar error",
+              "const skuDuplicado = pm.environment.get('sku_valido');",
+              "pm.environment.set('sku_duplicado', skuDuplicado);",
+              "",
+              "console.log('Usando SKU duplicado:', skuDuplicado);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about duplicate SKU', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('SKU ya existe');",
+              "});",
+              "",
+              "console.log('Error de SKU duplicado validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"{{sku_duplicado}}\",\n    \"name\": \"Producto Duplicado\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con SKU duplicado\",\n    \"product_type\": \"Medio valor\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Campos Faltantes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about missing fields', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('Campos requeridos faltantes');",
+              "});",
+              "",
+              "console.log('Error de campos faltantes validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"MED-1234\",\n    \"name\": \"Producto Incompleto\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - SKU Inválido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about invalid SKU', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('SKU');",
+              "});",
+              "",
+              "console.log('Error de SKU inválido validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"INVALID-SKU\",\n    \"name\": \"Producto SKU Inválido\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con SKU inválido\",\n    \"product_type\": \"Medio valor\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Fecha Pasada",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about past date', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('fecha de vencimiento');",
+              "});",
+              "",
+              "console.log('Error de fecha pasada validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"MED-9999\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Medio valor\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Cantidad Inválida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about invalid quantity', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('cantidad');",
+              "});",
+              "",
+              "console.log('Error de cantidad inválida validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"MED-8888\",\n    \"name\": \"Producto Cantidad Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 0,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con cantidad invalida\",\n    \"product_type\": \"Medio valor\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Ubicación Inválida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about invalid location', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('ubicación');",
+              "});",
+              "",
+              "console.log('Error de ubicación inválida validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"MED-7777\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Medio valor\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Todos los Productos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has success structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('data');",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "// Validar que data es un array",
+              "pm.test('Data is an array', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.data).to.be.an('array');",
+              "});",
+              "",
+              "// Validar que hay al menos un producto",
+              "pm.test('At least one product exists', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.data.length).to.be.at.least(1);",
+              "});",
+              "",
+              "// Validar estructura de productos",
+              "pm.test('Products have required fields', function () {",
+              "    const response = pm.response.json();",
+              "    if (response.data.length > 0) {",
+              "        const product = response.data[0];",
+              "        pm.expect(product).to.have.property('sku');",
+              "        pm.expect(product).to.have.property('name');",
+              "        pm.expect(product).to.have.property('expiration_date');",
+              "        pm.expect(product).to.have.property('quantity');",
+              "        pm.expect(product).to.have.property('price');",
+              "        pm.expect(product).to.have.property('location');",
+              "    }",
+              "});",
+              "",
+              "console.log('Lista de productos obtenida exitosamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Producto por ID",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Usar el ID del producto creado anteriormente",
+              "const productId = pm.environment.get('product_id');",
+              "if (!productId) {",
+              "    pm.environment.set('product_id', '1');",
+              "}",
+              "",
+              "console.log('Obteniendo producto con ID:', pm.environment.get('product_id'));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has success structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('data');",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "// Validar estructura del producto",
+              "pm.test('Product has required fields', function () {",
+              "    const response = pm.response.json();",
+              "    const product = response.data;",
+              "    pm.expect(product).to.have.property('sku');",
+              "    pm.expect(product).to.have.property('name');",
+              "    pm.expect(product).to.have.property('expiration_date');",
+              "    pm.expect(product).to.have.property('quantity');",
+              "    pm.expect(product).to.have.property('price');",
+              "    pm.expect(product).to.have.property('location');",
+              "    pm.expect(product).to.have.property('description');",
+              "    pm.expect(product).to.have.property('product_type');",
+              "});",
+              "",
+              "console.log('Producto obtenido por ID exitosamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products/{{product_id}}",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products", "{{product_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Producto por ID - No Encontrado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about product not found', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.error).to.include('no encontrado');",
+              "});",
+              "",
+              "console.log('Error de producto no encontrado validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products/99999",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products", "99999"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Eliminar Producto por ID",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Usar el ID del producto creado anteriormente",
+              "const productId = pm.environment.get('product_id');",
+              "if (!productId) {",
+              "    pm.environment.set('product_id', '1');",
+              "}",
+              "",
+              "console.log('Eliminando producto con ID:', pm.environment.get('product_id'));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has success structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('message');",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "// Validar mensaje de eliminación",
+              "pm.test('Deletion message is correct', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.message).to.include('eliminado exitosamente');",
+              "});",
+              "",
+              "console.log('Producto eliminado exitosamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products/{{product_id}}",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products", "{{product_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Eliminar Producto por ID - No Encontrado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea de error",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Response has error structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message is about product not found', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('no encontrado');",
+              "});",
+              "",
+              "console.log('Error de producto no encontrado para eliminar validado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products/99999",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products", "99999"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Eliminar Todos los Productos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has success structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('message');",
+              "    pm.expect(response).to.have.property('data');",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "// Validar estructura de data",
+              "pm.test('Data has deleted_count', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.data).to.have.property('deleted_count');",
+              "    pm.expect(response.data.deleted_count).to.be.a('number');",
+              "});",
+              "",
+              "// Validar mensaje de eliminación",
+              "pm.test('Deletion message is correct', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.message).to.include('eliminaron');",
+              "});",
+              "",
+              "console.log('Todos los productos eliminados exitosamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products/delete-all",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products", "delete-all"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "url_local_inventario",
+      "value": "http://localhost:8083",
+      "type": "string"
+    }
+  ]
+}

@@ -27,9 +27,14 @@ def create_app():
 def configure_routes(app):
     """Configura las rutas de la aplicación"""
     from .controllers.health_controller import HealthCheckView
+    from .controllers.product_controller import ProductController, ProductDeleteAllController
     
     api = Api(app)
     
     # Health check endpoint
     api.add_resource(HealthCheckView, '/inventory/ping')
+    
+    # Product endpoints
+    api.add_resource(ProductController, '/inventory/products', '/inventory/products/<int:product_id>')
+    api.add_resource(ProductDeleteAllController, '/inventory/products/delete-all')
 
