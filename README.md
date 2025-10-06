@@ -32,33 +32,52 @@ Estructura básica preparada para escalar:
 
 ## Tecnologías
 
-- Python 3.9
+- Python 3.11
 - Flask 3.0.3
+- Flask-RESTful 0.3.10
+- SQLAlchemy 2.0.23
+- PostgreSQL (psycopg2-binary)
 - Gunicorn 21.2.0
 - Docker
+- pytest 8.3.4
 
 ## Instalación
 
 ### Desarrollo Local
 
-1. Instalar dependencias:
+1. **Instalar dependencias:**
    ```bash
    pip install -r requirements.txt
    ```
 
-2. Ejecutar la aplicación:
+2. **Configurar base de datos PostgreSQL:**
+   ```bash
+   # Asegúrate de que PostgreSQL esté ejecutándose
+   # Crear base de datos y usuario (opcional, se crea automáticamente)
+   createdb medisupply_local_db
+   ```
+
+3. **Ejecutar la aplicación:**
    ```bash
    python app.py
    ```
 
+4. **La aplicación estará disponible en:** `http://localhost:8080`
+
 ### Con Docker
 
-1. Construir y ejecutar:
+1. **Usar docker-compose desde el directorio de infraestructura:**
    ```bash
+   cd ../proyecto-integrador-medisupply-infraestructura
    docker-compose up --build
    ```
 
-2. La aplicación estará disponible en `http://localhost:8083`
+2. **La aplicación estará disponible en:** `http://localhost:8083`
+
+3. **Verificar que todos los servicios estén ejecutándose:**
+   ```bash
+   docker-compose ps
+   ```
 
 ## Endpoints
 
@@ -139,6 +158,49 @@ El proyecto incluye una colección de Postman completa con casos de prueba:
 
 La colección usa la variable `url_local_inventario` configurada por defecto en `http://localhost:8083`.
 
+## Ejemplos de Uso de la API
+
+### Crear un Producto
+
+```bash
+curl -X POST http://localhost:8083/inventory/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sku": "MED-1234",
+    "name": "Paracetamol 500mg",
+    "expiration_date": "2025-12-31T00:00:00.000Z",
+    "quantity": 100,
+    "price": 15000,
+    "location": "A-01-01",
+    "description": "Analgésico y antipirético",
+    "product_type": "Alto valor"
+  }'
+```
+
+### Obtener Todos los Productos
+
+```bash
+curl -X GET http://localhost:8083/inventory/products
+```
+
+### Obtener Producto por ID
+
+```bash
+curl -X GET http://localhost:8083/inventory/products/1
+```
+
+### Eliminar Producto
+
+```bash
+curl -X DELETE http://localhost:8083/inventory/products/1
+```
+
+### Health Check
+
+```bash
+curl -X GET http://localhost:8083/inventory/ping
+```
+
 ## Cloud Run
 
 Para desplegar en Google Cloud Run:
@@ -162,12 +224,22 @@ Para desplegar en Google Cloud Run:
      --allow-unauthenticated
    ```
 
+## Base de Datos
+
+El proyecto utiliza PostgreSQL como base de datos principal:
+
+- **Desarrollo local**: `postgresql://medisupply_local_user:medisupply_local_password@localhost:5432/medisupply_local_db`
+- **Docker**: Conecta automáticamente a la base de datos del contenedor `medisupply-db`
+- **Tablas**: Se crean automáticamente al iniciar la aplicación
+- **Persistencia**: Los datos se mantienen en volúmenes Docker
+
 ## Variables de Entorno
 
 - `HOST`: Host de la aplicación (default: 0.0.0.0)
 - `PORT`: Puerto de la aplicación (default: 8080)
 - `DEBUG`: Modo debug (default: True)
 - `SECRET_KEY`: Clave secreta de Flask
+- `DATABASE_URL`: URL de conexión a PostgreSQL
 
 ## Testing
 
@@ -182,6 +254,9 @@ pytest -v
 
 # Ejecutar pruebas específicas
 pytest tests/test_health_controller.py
+
+# Ejecutar pruebas de un módulo específico
+pytest tests/test_product_service.py -v
 ```
 
 ### Ejecutar con Coverage
@@ -193,9 +268,34 @@ pytest --cov=app --cov-report=term-missing
 # Generar reporte HTML de coverage
 pytest --cov=app --cov-report=html
 
-# Verificar 100% de coverage
-pytest --cov=app --cov-fail-under=100
+# Verificar coverage mínimo del 95%
+pytest --cov=app --cov-fail-under=95
+
+# Ejecutar solo tests que fallan
+pytest --lf
 ```
+
+- **Arquitectura de testing robusta con mocking completo**
+
+### Estructura de Tests
+
+```
+tests/
+├── test_app.py                    # Tests de aplicación principal
+├── test_base_controller.py        # Tests de controlador base
+├── test_base_model.py             # Tests de modelo base
+├── test_base_repository.py        # Tests de repositorio base
+├── test_base_service.py           # Tests de servicio base
+├── test_config_settings.py        # Tests de configuración
+├── test_exceptions.py             # Tests de excepciones
+├── test_health_controller.py      # Tests de health check
+├── test_product_controller.py     # Tests de controlador de productos
+├── test_product_model.py          # Tests de modelo de productos
+├── test_product_repository.py     # Tests de repositorio de productos
+└── test_product_service.py        # Tests de servicio de productos
+```
+
+
 
 ## Desarrollo
 
@@ -206,3 +306,24 @@ Este proyecto sigue la arquitectura de microservicios y está diseñado para int
 - **Inventarios**: Puerto 8083 (este servicio)
 
 Todos los servicios comparten la misma base de datos PostgreSQL y están conectados a través de la red Docker `medisupply-net`.
+
+### Arquitectura del Proyecto
+
+```
+app/
+├── config/              # Configuración de la aplicación
+├── controllers/         # Controladores REST (API endpoints)
+├── services/           # Lógica de negocio
+├── repositories/       # Acceso a datos (SQLAlchemy)
+├── models/             # Modelos de datos
+├── exceptions/         # Excepciones personalizadas
+└── utils/              # Utilidades comunes
+```
+
+### Flujo de Datos
+
+1. **Request** → Controller
+2. **Controller** → Service (lógica de negocio)
+3. **Service** → Repository (acceso a datos)
+4. **Repository** → Database (PostgreSQL)
+5. **Response** ← Controller ← Service ← Repository
