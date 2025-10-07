@@ -19,6 +19,17 @@ class Config:
     
     # Configuración de base de datos
     DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://medisupply_local_user:medisupply_local_password@localhost:5432/medisupply_local_db')
+    
+    # Configuración de Google Cloud Storage
+    GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID', 'soluciones-cloud-2024-02')
+    BUCKET_NAME = os.getenv('BUCKET_NAME', 'medisupply-images-bucket')
+    BUCKET_FOLDER = os.getenv('BUCKET_FOLDER', 'products')
+    BUCKET_LOCATION = os.getenv('BUCKET_LOCATION', 'us-central1')
+    GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '/app/credentials/gcp-credentials.json')
+    
+    # Configuración de archivos de imagen
+    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
 
 
 class DevelopmentConfig(Config):

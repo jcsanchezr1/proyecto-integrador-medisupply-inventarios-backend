@@ -107,8 +107,8 @@
           "script": {
             "exec": [
               "// Validar que la respuesta sea exitosa",
-              "pm.test('Status code is 200', function () {",
-              "    pm.response.to.have.status(200);",
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
               "});",
               "",
               "// Validar que la respuesta sea JSON",
@@ -872,6 +872,533 @@
           "raw": "{{url_local_inventario}}/inventory/products/delete-all",
           "host": ["{{url_local_inventario}}"],
           "path": ["inventory", "products", "delete-all"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Con Imagen Válida",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generar datos aleatorios para el producto con imagen",
+              "const skuNumber = Math.floor(Math.random() * 9000) + 1000;",
+              "const sku = `MED-${skuNumber}`;",
+              "",
+              "const nombres = [",
+              "    'Paracetamol 500mg',",
+              "    'Ibuprofeno 400mg',",
+              "    'Aspirina 100mg',",
+              "    'Omeprazol 20mg',",
+              "    'Amoxicilina 500mg',",
+              "    'Metformina 850mg',",
+              "    'Losartan 50mg',",
+              "    'Atorvastatina 20mg',",
+              "    'Levotiroxina 50mcg',",
+              "    'Metoprolol 50mg'",
+              "];",
+              "",
+              "const tipos = ['Alto valor', 'Medio valor', 'Bajo valor'];",
+              "const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
+              "",
+              "const nombre = nombres[Math.floor(Math.random() * nombres.length)];",
+              "const tipo = tipos[Math.floor(Math.random() * tipos.length)];",
+              "const ubicacion = ubicaciones[Math.floor(Math.random() * ubicaciones.length)];",
+              "",
+              "// Generar fecha de vencimiento futura (entre 30 días y 2 años)",
+              "const fechaVencimiento = new Date();",
+              "fechaVencimiento.setDate(fechaVencimiento.getDate() + Math.floor(Math.random() * 700) + 30);",
+              "",
+              "const cantidad = Math.floor(Math.random() * 999) + 1;",
+              "const precio = Math.floor(Math.random() * 50000) + 5000;",
+              "",
+              "// Guardar variables para usar en el request",
+              "pm.environment.set('sku_imagen', sku);",
+              "pm.environment.set('nombre_imagen', nombre);",
+              "pm.environment.set('fecha_vencimiento_imagen', fechaVencimiento.toISOString());",
+              "pm.environment.set('cantidad_imagen', cantidad.toString());",
+              "pm.environment.set('precio_imagen', precio.toString());",
+              "pm.environment.set('ubicacion_imagen', ubicacion);",
+              "pm.environment.set('descripcion_imagen', `Descripcion del producto ${nombre} con foto`);",
+              "pm.environment.set('tipo_imagen', tipo);",
+              "",
+              "console.log('Datos generados para producto con imagen:', {",
+              "    sku, nombre, fechaVencimiento: fechaVencimiento.toISOString(),",
+              "    cantidad, precio, ubicacion, tipo",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has proper structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    if (response.success) {",
+              "        pm.expect(response).to.have.property('message');",
+              "        pm.expect(response).to.have.property('data');",
+              "        pm.expect(response.data).to.have.property('photo_url');",
+              "        pm.expect(response.data).to.have.property('photo_filename');",
+              "    } else {",
+              "        pm.expect(response).to.have.property('error');",
+              "    }",
+              "});",
+              "",
+              "console.log('Respuesta de producto con imagen procesada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "sku",
+              "value": "{{sku_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "name",
+              "value": "{{nombre_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "expiration_date",
+              "value": "{{fecha_vencimiento_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "quantity",
+              "value": "{{cantidad_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "{{precio_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "location",
+              "value": "{{ubicacion_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "{{descripcion_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "product_type",
+              "value": "{{tipo_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "photo",
+              "type": "file",
+              "src": "/path/to/valid-image.jpg",
+              "description": "Archivo de imagen válido (JPG, PNG, GIF) máximo 5MB"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Imagen con Extensión Inválida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has proper structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    if (response.success) {",
+              "        pm.expect(response).to.have.property('message');",
+              "        pm.expect(response).to.have.property('data');",
+              "    } else {",
+              "        pm.expect(response).to.have.property('error');",
+              "    }",
+              "});",
+              "",
+              "console.log('Respuesta de extensión inválida procesada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "sku",
+              "value": "MED-1235",
+              "type": "text"
+            },
+            {
+              "key": "name",
+              "value": "Producto con Archivo Inválido",
+              "type": "text"
+            },
+            {
+              "key": "expiration_date",
+              "value": "2025-12-31T00:00:00Z",
+              "type": "text"
+            },
+            {
+              "key": "quantity",
+              "value": "50",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "10000.0",
+              "type": "text"
+            },
+            {
+              "key": "location",
+              "value": "B-02-02",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "Producto con archivo no permitido",
+              "type": "text"
+            },
+            {
+              "key": "product_type",
+              "value": "Medio valor",
+              "type": "text"
+            },
+            {
+              "key": "photo",
+              "type": "file",
+              "src": "/path/to/invalid-file.txt",
+              "description": "Archivo con extensión no permitida (.txt)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Imagen Demasiado Grande",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has proper structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    if (response.success) {",
+              "        pm.expect(response).to.have.property('message');",
+              "        pm.expect(response).to.have.property('data');",
+              "    } else {",
+              "        pm.expect(response).to.have.property('error');",
+              "    }",
+              "});",
+              "",
+              "console.log('Respuesta de tamaño de archivo procesada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "sku",
+              "value": "MED-1236",
+              "type": "text"
+            },
+            {
+              "key": "name",
+              "value": "Producto con Imagen Grande",
+              "type": "text"
+            },
+            {
+              "key": "expiration_date",
+              "value": "2025-12-31T00:00:00.000Z",
+              "type": "text"
+            },
+            {
+              "key": "quantity",
+              "value": "50",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "10000.0",
+              "type": "text"
+            },
+            {
+              "key": "location",
+              "value": "C-03-03",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "Producto con imagen muy grande",
+              "type": "text"
+            },
+            {
+              "key": "product_type",
+              "value": "Bajo valor",
+              "type": "text"
+            },
+            {
+              "key": "photo",
+              "type": "file",
+              "src": "/path/to/large-image.jpg",
+              "description": "Archivo de imagen mayor a 5MB"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Archivo Vacío",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has proper structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    if (response.success) {",
+              "        pm.expect(response).to.have.property('message');",
+              "        pm.expect(response).to.have.property('data');",
+              "    } else {",
+              "        pm.expect(response).to.have.property('error');",
+              "    }",
+              "});",
+              "",
+              "console.log('Respuesta de archivo vacío procesada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "sku",
+              "value": "MED-1237",
+              "type": "text"
+            },
+            {
+              "key": "name",
+              "value": "Producto con Archivo Vacío",
+              "type": "text"
+            },
+            {
+              "key": "expiration_date",
+              "value": "2025-12-31T00:00:00.000Z",
+              "type": "text"
+            },
+            {
+              "key": "quantity",
+              "value": "50",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "10000.0",
+              "type": "text"
+            },
+            {
+              "key": "location",
+              "value": "D-04-04",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "Producto con archivo vacío",
+              "type": "text"
+            },
+            {
+              "key": "product_type",
+              "value": "Alto valor",
+              "type": "text"
+            },
+            {
+              "key": "photo",
+              "type": "file",
+              "src": "/path/to/empty-file.jpg",
+              "description": "Archivo de imagen vacío (0 bytes)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Sin Imagen (Válido)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea exitosa",
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has success structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('message');",
+              "    pm.expect(response).to.have.property('data');",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "// Validar que el producto no tenga foto",
+              "pm.test('Product has no photo', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.data.photo_filename).to.be.null;",
+              "    pm.expect(response.data.photo_url).to.be.null;",
+              "});",
+              "",
+              "console.log('Producto sin imagen creado correctamente');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sku\": \"MED-{{$randomInt}}\",\n  \"name\": \"{{$randomProductName}} Sin Imagen\",\n  \"expiration_date\": \"{{$isoTimestamp}}\",\n  \"quantity\": {{$randomInt}},\n  \"price\": {{$randomFloat}},\n  \"location\": \"{{$randomAlpha}}-{{$randomInt}}\",\n  \"description\": \"{{$randomLoremSentence}} sin foto\",\n  \"product_type\": \"{{$randomArrayElement}}\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Producto con Imagen - Verificar URL",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar estructura de respuesta",
+              "pm.test('Response has proper structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    if (response.success) {",
+              "        pm.expect(response).to.have.property('message');",
+              "        pm.expect(response).to.have.property('data');",
+              "        if (response.data.photo_filename) {",
+              "            pm.expect(response.data.photo_url).to.include('storage.googleapis.com');",
+              "            pm.expect(response.data.photo_url).to.include('products/');",
+              "        }",
+              "    } else {",
+              "        pm.expect(response).to.have.property('error');",
+              "    }",
+              "});",
+              "",
+              "console.log('Respuesta de consulta de producto procesada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products/1",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products", "1"]
         }
       },
       "response": []

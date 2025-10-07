@@ -31,6 +31,7 @@ class ProductDB(Base):
     description = Column(Text, nullable=True)
     product_type = Column(String(50), nullable=False)
     photo_filename = Column(String(255), nullable=True)
+    photo_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -58,6 +59,7 @@ class ProductRepository(BaseRepository):
     def _db_to_model(self, db_product: ProductDB) -> Product:
         """Convierte un objeto de base de datos a modelo de dominio"""
         return Product(
+            id=db_product.id,
             sku=db_product.sku,
             name=db_product.name,
             expiration_date=db_product.expiration_date.isoformat() if db_product.expiration_date else None,
@@ -66,7 +68,8 @@ class ProductRepository(BaseRepository):
             location=db_product.location,
             description=db_product.description,
             product_type=db_product.product_type,
-            photo_filename=db_product.photo_filename
+            photo_filename=db_product.photo_filename,
+            photo_url=db_product.photo_url
         )
     
     def _model_to_db(self, product: Product) -> ProductDB:
@@ -80,7 +83,8 @@ class ProductRepository(BaseRepository):
             location=product.location,
             description=product.description,
             product_type=product.product_type,
-            photo_filename=product.photo_filename
+            photo_filename=product.photo_filename,
+            photo_url=product.photo_url
         )
     
     def create(self, product: Product) -> Product:

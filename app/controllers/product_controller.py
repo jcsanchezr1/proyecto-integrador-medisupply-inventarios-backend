@@ -35,7 +35,7 @@ class ProductController(BaseController, Resource):
             # Crear producto
             product = self.product_service.create_product(product_data, photo_file)
             
-            return self.success_response(
+            return self.created_response(
                 data=product.to_dict(),
                 message="Producto registrado exitosamente"
             )

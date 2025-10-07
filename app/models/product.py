@@ -12,7 +12,9 @@ class Product(BaseModel):
     def __init__(self, sku: str, name: str, expiration_date: datetime, 
                  quantity: int, price: float, location: str, 
                  description: str, product_type: str, 
-                 photo_filename: Optional[str] = None):
+                 photo_filename: Optional[str] = None, 
+                 photo_url: Optional[str] = None,
+                 id: Optional[int] = None):
         """
         Inicializa un producto con validaciones
         
@@ -26,7 +28,10 @@ class Product(BaseModel):
             description: Descripción del producto
             product_type: Tipo de producto (Alto valor, Medio valor, Bajo valor)
             photo_filename: Nombre del archivo de foto (opcional)
+            photo_url: URL de la foto (opcional)
+            id: ID del producto (opcional)
         """
+        self.id = id
         self.sku = sku
         self.name = name
         self.expiration_date = expiration_date
@@ -36,6 +41,7 @@ class Product(BaseModel):
         self.description = description
         self.product_type = product_type
         self.photo_filename = photo_filename
+        self.photo_url = photo_url
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
     
@@ -152,6 +158,7 @@ class Product(BaseModel):
             'description': self.description,
             'product_type': self.product_type,
             'photo_filename': self.photo_filename,
+            'photo_url': self.photo_url,
             'created_at': self.created_at.isoformat() if isinstance(self.created_at, datetime) else self.created_at,
             'updated_at': self.updated_at.isoformat() if isinstance(self.updated_at, datetime) else self.updated_at
         }

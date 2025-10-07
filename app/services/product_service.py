@@ -3,6 +3,8 @@ from datetime import datetime
 from werkzeug.datastructures import FileStorage
 from app.models.product import Product
 from app.repositories.product_repository import ProductRepository
+from app.services.cloud_storage_service import CloudStorageService
+from app.config.settings import Config
 from app.exceptions.validation_error import ValidationError
 from app.exceptions.business_logic_error import BusinessLogicError
 
@@ -12,8 +14,10 @@ class ProductService:
     Servicio para la lógica de negocio de productos
     """
     
-    def __init__(self, product_repository=None):
+    def __init__(self, product_repository=None, cloud_storage_service=None, config=None):
         self.product_repository = product_repository or ProductRepository()
+        self.config = config or Config()
+        self.cloud_storage_service = cloud_storage_service or CloudStorageService(self.config)
     
     def create_product(self, product_data: Dict[str, Any], photo_file: Optional[FileStorage] = None) -> Product:
         """
@@ -36,9 +40,10 @@ class ProductService:
             
             # Procesar archivo de foto si se proporciona
             if photo_file is not None:
-                photo_filename = self._process_photo_file(photo_file)
+                photo_filename, photo_url = self._process_photo_file(photo_file)
                 if photo_filename:
                     product_data['photo_filename'] = photo_filename
+                    product_data['photo_url'] = photo_url
             
             # Crear instancia del producto
             product = self._create_product_instance(product_data)
@@ -48,6 +53,10 @@ class ProductService:
             
             # Crear producto en el repositorio
             created_product = self.product_repository.create(product)
+            
+            # Generar URL si tiene foto
+            if created_product.photo_filename:
+                created_product.photo_url = self.cloud_storage_service.get_image_url(created_product.photo_filename)
             
             return created_product
             
@@ -72,7 +81,11 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            return self.product_repository.get_by_id(product_id)
+            product = self.product_repository.get_by_id(product_id)
+            if product and product.photo_filename:
+                # Generar URL fresca para la foto
+                product.photo_url = self.cloud_storage_service.get_image_url(product.photo_filename)
+            return product
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener producto: {str(e)}")
     
@@ -105,7 +118,12 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            return self.product_repository.get_all()
+            products = self.product_repository.get_all()
+            # Generar URLs para todos los productos que tengan foto
+            for product in products:
+                if product.photo_filename:
+                    product.photo_url = self.cloud_storage_service.get_image_url(product.photo_filename)
+            return products
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener productos: {str(e)}")
     
@@ -120,7 +138,7 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            products = self.product_repository.get_all()
+            products = self.get_all_products()
             return [product.to_dict() for product in products]
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener resumen de productos: {str(e)}")
@@ -275,49 +293,43 @@ class ProductService:
         # Validar que el producto sea válido según el modelo
         product.validate()
     
-    def _process_photo_file(self, photo_file: Optional[FileStorage]) -> Optional[str]:
+    def _process_photo_file(self, photo_file: Optional[FileStorage]) -> tuple[Optional[str], Optional[str]]:
         """
-        Procesa el archivo de foto y retorna el nombre del archivo
+        Procesa el archivo de foto y lo sube a Google Cloud Storage
         
         Args:
             photo_file: Archivo de foto del producto
             
         Returns:
-            Optional[str]: Nombre del archivo procesado o None
+            tuple[Optional[str], Optional[str]]: (filename, url_pública)
             
         Raises:
             ValidationError: Si hay error en el archivo
         """
         if not photo_file or not photo_file.filename:
-            return None
+            return None, None
         
-        # Validar que el archivo tenga nombre
-        if not photo_file.filename.strip():
-            raise ValidationError("El campo 'Foto' debe aceptar únicamente archivos de imagen (JPG, PNG, GIF) con un tamaño máximo de 2MB")
-        
-        # Validar tipo de archivo (JPG, PNG, GIF)
-        if not self._is_allowed_file(photo_file.filename):
-            raise ValidationError("El archivo debe ser una imagen válida (JPG, PNG, GIF)")
-        
-        # Validar tamaño del archivo (2MB máximo)
-        photo_file.seek(0, 2)  # Ir al final del archivo
-        file_size = photo_file.tell()
-        photo_file.seek(0)  # Volver al inicio
-        
-        if file_size == 0:
-            raise ValidationError("El archivo está vacío")
-        
-        if file_size > 2 * 1024 * 1024:  # 2MB en bytes
-            raise ValidationError("El archivo debe tener un tamaño máximo de 2MB")
-        
-        # TODO: Implementar guardado en bucket S3/Azure Storage
-        # Por ahora retornamos el nombre del archivo original
-        # En implementación real: 
-        # - Generar nombre único para el archivo
-        # - Subir archivo al bucket
-        # - Retornar URL o nombre del archivo en el bucket
-        
-        return photo_file.filename
+        try:
+            # Generar nombre único para el archivo
+            unique_filename = self.cloud_storage_service.generate_unique_filename(photo_file.filename, "product")
+            
+            # Subir imagen a Google Cloud Storage
+            success, message, _ = self.cloud_storage_service.upload_image(
+                photo_file, unique_filename
+            )
+            
+            if not success:
+                raise ValidationError(f"Error al subir imagen: {message}")
+            
+            # Generar URL firmada
+            signed_url = self.cloud_storage_service.get_image_url(unique_filename)
+            
+            return unique_filename, signed_url
+            
+        except Exception as e:
+            if isinstance(e, ValidationError):
+                raise
+            raise ValidationError(f"Error al procesar archivo de foto: {str(e)}")
     
     def _is_allowed_file(self, filename: str) -> bool:
         """

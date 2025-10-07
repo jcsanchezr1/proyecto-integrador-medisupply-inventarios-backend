@@ -29,6 +29,27 @@ class BaseController:
             
         return response, 200
     
+    def created_response(self, data: Any, message: str = "Recurso creado exitosamente") -> Tuple[Dict[str, Any], int]:
+        """
+        Crea una respuesta de éxito para creación de recursos (201)
+        
+        Args:
+            data: Datos a retornar
+            message: Mensaje de éxito
+            
+        Returns:
+            Tuple[Dict[str, Any], int]: Respuesta y código de estado 201
+        """
+        response = {
+            "success": True,
+            "message": message
+        }
+        
+        if data is not None:
+            response["data"] = data
+            
+        return response, 201
+    
     def error_response(self, message: str, details: Optional[str] = None, status_code: int = 400) -> Tuple[Dict[str, Any], int]:
         """
         Crea una respuesta de error

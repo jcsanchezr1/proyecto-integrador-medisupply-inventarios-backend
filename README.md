@@ -109,7 +109,8 @@ Estructura básica preparada para escalar:
   "location": "A-01-01",
   "description": "Analgésico y antipirético",
   "product_type": "Alto valor",
-  "photo_filename": "paracetamol.jpg"
+  "photo_filename": "product_uuid.png",
+  "photo_url": "https://storage.googleapis.com/medisupply-images-bucket/products/product_uuid.png?Expires=...&GoogleAccessId=...&Signature=..."
 }
 ```
 
@@ -122,7 +123,37 @@ Estructura básica preparada para escalar:
 - **Precio**: Numérico positivo en COP
 - **Ubicación**: Formato "P-EE-NN" (Pasillo: A-Z, Estante: 01-99, Nivel: 01-99)
 - **Tipo de producto**: "Alto valor", "Medio valor", "Bajo valor"
-- **Foto**: JPG, PNG, GIF, máximo 2MB (opcional)
+- **Foto**: JPG, PNG, GIF, máximo 5MB (opcional)
+
+## Almacenamiento de Imágenes
+
+### Google Cloud Storage
+El servicio utiliza Google Cloud Storage para almacenar las fotos de los productos:
+
+- **Bucket**: `medisupply-images-bucket`
+- **Carpeta**: `products/`
+- **Acceso**: Privado con URLs firmadas
+- **Expiración**: 3 meses (2160 horas)
+
+### Campos de Imagen
+Cada producto puede tener asociada una foto con los siguientes campos:
+
+- **`photo_filename`**: Nombre único del archivo (ej: `product_uuid.png`)
+- **`photo_url`**: URL firmada para acceder a la imagen (generada dinámicamente)
+
+### Generación de URLs
+- Las URLs se generan automáticamente al crear un producto
+- Las URLs se regeneran en cada consulta para mantenerlas válidas
+- Formato: `https://storage.googleapis.com/medisupply-images-bucket/products/product_uuid.png?Expires=...&GoogleAccessId=...&Signature=...`
+
+### Configuración
+Las credenciales se configuran mediante variables de entorno:
+```bash
+GCP_PROJECT_ID=soluciones-cloud-2024-02
+BUCKET_NAME=medisupply-images-bucket
+BUCKET_FOLDER=products
+GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-credentials.json
+```
 
 ## Colección de Postman
 
