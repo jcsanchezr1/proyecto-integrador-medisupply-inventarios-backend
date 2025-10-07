@@ -51,7 +51,7 @@ class TestProductController:
         with app.test_request_context(json=valid_product_data):
             response, status_code = product_controller.post()
         
-        assert status_code == 200
+        assert status_code == 201
         assert response['success'] is True
         assert response['message'] == "Producto registrado exitosamente"
         assert response['data'] == {'id': 1, 'sku': 'MED-1234'}
@@ -72,7 +72,7 @@ class TestProductController:
                 
                 response, status_code = product_controller.post()
         
-        assert status_code == 200
+        assert status_code == 201
         assert response['success'] is True
         assert response['message'] == "Producto registrado exitosamente"
         mock_service.create_product.assert_called_once()

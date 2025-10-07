@@ -311,7 +311,7 @@ class TestProductService:
         mock_file.seek = MagicMock()
         mock_file.tell = MagicMock(return_value=1024)
         
-        with pytest.raises(ValidationError, match="El archivo debe ser una imagen válida"):
+        with pytest.raises(ValidationError, match="Error al subir imagen: Extensión no permitida"):
             product_service._process_photo_file(mock_file)
     
     def test_process_photo_file_empty_filename(self, product_service):
@@ -319,7 +319,7 @@ class TestProductService:
         mock_file = MagicMock()
         mock_file.filename = "   "
         
-        with pytest.raises(ValidationError, match="El campo 'Foto' debe aceptar únicamente archivos de imagen"):
+        with pytest.raises(ValidationError, match="Error al subir imagen: El archivo no tiene extensión"):
             product_service._process_photo_file(mock_file)
     
     def test_process_photo_file_empty_file(self, product_service):
@@ -337,9 +337,9 @@ class TestProductService:
         mock_file = MagicMock()
         mock_file.filename = "test.jpg"
         mock_file.seek = MagicMock()
-        mock_file.tell = MagicMock(return_value=3 * 1024 * 1024)  # 3MB
+        mock_file.tell = MagicMock(return_value=6 * 1024 * 1024)  # 6MB
         
-        with pytest.raises(ValidationError, match="El archivo debe tener un tamaño máximo de 2MB"):
+        with pytest.raises(ValidationError, match="Error al subir imagen: El archivo es demasiado grande"):
             product_service._process_photo_file(mock_file)
     
     def test_process_photo_file_valid_size(self, product_service):
@@ -350,7 +350,12 @@ class TestProductService:
         mock_file.tell = MagicMock(return_value=1024 * 1024)  # 1MB
         
         result = product_service._process_photo_file(mock_file)
-        assert result == "test.jpg"
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        filename, url = result
+        assert filename.startswith("product_")
+        assert filename.endswith(".jpg")
+        assert url is not None
         mock_file.seek.assert_any_call(0, 2)  # Verificar que se fue al final
         mock_file.seek.assert_any_call(0)    # Verificar que volvió al inicio
     
