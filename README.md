@@ -357,4 +357,4 @@ app/
 2. **Controller** → Service (lógica de negocio)
 3. **Service** → Repository (acceso a datos)
 4. **Repository** → Database (PostgreSQL)
-5. **Response** ← Controller ← Service ← Repository
+5. **Response** ← Controller ← Service ← Repository.
