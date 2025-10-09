@@ -28,6 +28,7 @@ def configure_routes(app):
     """Configura las rutas de la aplicación"""
     from .controllers.health_controller import HealthCheckView
     from .controllers.product_controller import ProductController, ProductDeleteAllController
+    from .controllers.provider_products_controller import ProviderProductsController
     
     api = Api(app)
     
@@ -37,4 +38,7 @@ def configure_routes(app):
     # Product endpoints
     api.add_resource(ProductController, '/inventory/products', '/inventory/products/<int:product_id>')
     api.add_resource(ProductDeleteAllController, '/inventory/products/delete-all')
+    
+    # Provider products endpoint
+    api.add_resource(ProviderProductsController, '/inventory/providers/products')
 

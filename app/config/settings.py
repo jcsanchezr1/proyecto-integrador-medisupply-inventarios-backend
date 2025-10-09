@@ -30,6 +30,9 @@ class Config:
     # Configuración de archivos de imagen
     ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
+    
+    # Configuración de servicios externos
+    PROVIDERS_SERVICE_URL = os.getenv('PROVIDERS_SERVICE_URL', 'http://localhost:8083')
 
 
 class DevelopmentConfig(Config):
