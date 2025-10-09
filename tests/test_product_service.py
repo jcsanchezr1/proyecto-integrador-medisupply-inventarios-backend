@@ -32,6 +32,7 @@ class TestProductService:
             'location': 'A-01-01',
             'description': 'Producto de prueba',
             'product_type': 'Alto valor',
+            'provider_id': '550e8400-e29b-41d4-a716-446655440000',
             'photo_filename': 'test.jpg'
         }
     
@@ -52,6 +53,13 @@ class TestProductService:
     def test_create_product_validation_error_missing_fields(self, product_service, valid_product_data):
         """Test: Error de validación por campos faltantes"""
         del valid_product_data['sku']
+        
+        with pytest.raises(ValidationError, match="Campos requeridos faltantes"):
+            product_service.create_product(valid_product_data)
+    
+    def test_create_product_validation_error_missing_provider_id(self, product_service, valid_product_data):
+        """Test: Error de validación por provider_id faltante"""
+        del valid_product_data['provider_id']
         
         with pytest.raises(ValidationError, match="Campos requeridos faltantes"):
             product_service.create_product(valid_product_data)

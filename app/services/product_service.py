@@ -210,7 +210,7 @@ class ProductService:
         """
         required_fields = [
             'sku', 'name', 'expiration_date', 'quantity', 
-            'price', 'location', 'description', 'product_type'
+            'price', 'location', 'description', 'product_type', 'provider_id'
         ]
         
         missing_fields = []
@@ -249,10 +249,11 @@ class ProductService:
             elif not isinstance(expiration_date, datetime):
                 raise ValidationError("La fecha de vencimiento debe ser un datetime o string válido")
             
-            # Convertir cantidad y precio
+            # Convertir cantidad, precio y provider_id
             try:
                 quantity = int(product_data['quantity'])
                 price = float(product_data['price'])
+                provider_id = str(product_data['provider_id'])
             except (ValueError, TypeError) as e:
                 raise ValidationError(f"Error en conversión de tipos numéricos: {str(e)}")
             
@@ -270,6 +271,7 @@ class ProductService:
                 location=location,
                 description=description,
                 product_type=product_type,
+                provider_id=provider_id,
                 photo_filename=photo_filename
             )
         except (ValueError, TypeError) as e:

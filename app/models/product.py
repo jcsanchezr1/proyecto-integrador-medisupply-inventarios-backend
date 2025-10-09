@@ -11,7 +11,7 @@ class Product(BaseModel):
     
     def __init__(self, sku: str, name: str, expiration_date: datetime, 
                  quantity: int, price: float, location: str, 
-                 description: str, product_type: str, 
+                 description: str, product_type: str, provider_id: str,
                  photo_filename: Optional[str] = None, 
                  photo_url: Optional[str] = None,
                  id: Optional[int] = None):
@@ -27,6 +27,7 @@ class Product(BaseModel):
             location: Ubicación en almacén (formato P-EE-NN)
             description: Descripción del producto
             product_type: Tipo de producto (Alto valor, Medio valor, Bajo valor)
+            provider_id: ID del proveedor (UUID string)
             photo_filename: Nombre del archivo de foto (opcional)
             photo_url: URL de la foto (opcional)
             id: ID del producto (opcional)
@@ -40,6 +41,7 @@ class Product(BaseModel):
         self.location = location
         self.description = description
         self.product_type = product_type
+        self.provider_id = provider_id
         self.photo_filename = photo_filename
         self.photo_url = photo_url
         self.created_at = datetime.utcnow()
@@ -56,6 +58,7 @@ class Product(BaseModel):
         self._validate_price()
         self._validate_location()
         self._validate_product_type()
+        self._validate_provider_id()
         self._validate_photo_filename()
     
     def _validate_sku(self) -> None:
@@ -133,6 +136,19 @@ class Product(BaseModel):
         if self.product_type not in valid_types:
             raise ValueError("El tipo de producto debe ser: Alto valor, Medio valor o Bajo valor")
     
+    def _validate_provider_id(self) -> None:
+        """Valida ID del proveedor: UUID string válido"""
+        if not self.provider_id:
+            raise ValueError("El ID del proveedor es obligatorio")
+        
+        if not isinstance(self.provider_id, str):
+            raise ValueError("El ID del proveedor debe ser un string")
+        
+        # Validar formato UUID (8-4-4-4-12 caracteres hexadecimales)
+        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        if not re.match(uuid_pattern, self.provider_id.lower()):
+            raise ValueError("El ID del proveedor debe ser un UUID válido")
+    
     def _validate_photo_filename(self) -> None:
         """Valida archivo de foto: JPG, PNG, GIF, máximo 2MB"""
         if self.photo_filename:
@@ -157,6 +173,7 @@ class Product(BaseModel):
             'location': self.location,
             'description': self.description,
             'product_type': self.product_type,
+            'provider_id': self.provider_id,
             'photo_filename': self.photo_filename,
             'photo_url': self.photo_url,
             'created_at': self.created_at.isoformat() if isinstance(self.created_at, datetime) else self.created_at,

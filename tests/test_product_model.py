@@ -18,6 +18,7 @@ class TestProduct:
             'location': 'A-01-01',
             'description': 'Producto de prueba',
             'product_type': 'Alto valor',
+            'provider_id': '550e8400-e29b-41d4-a716-446655440000',
             'photo_filename': 'test.jpg'
         }
     
@@ -32,6 +33,7 @@ class TestProduct:
         assert product.location == 'A-01-01'
         assert product.description == 'Producto de prueba'
         assert product.product_type == 'Alto valor'
+        assert product.provider_id == '550e8400-e29b-41d4-a716-446655440000'
         assert product.photo_filename == 'test.jpg'
         assert product.created_at is not None
         assert product.updated_at is not None
@@ -223,6 +225,43 @@ class TestProduct:
         with pytest.raises(ValueError, match="El tipo de producto es obligatorio"):
             product.validate()
     
+    def test_validate_provider_id_valid(self, valid_product_data):
+        """Test: Validar provider_id válido"""
+        product = Product(**valid_product_data)
+        product.validate()  # No debe lanzar excepción
+    
+    def test_validate_provider_id_invalid_type(self, valid_product_data):
+        """Test: Validar provider_id con tipo inválido"""
+        valid_product_data['provider_id'] = 123
+        product = Product(**valid_product_data)
+        
+        with pytest.raises(ValueError, match="El ID del proveedor debe ser un string"):
+            product.validate()
+    
+    def test_validate_provider_id_invalid_uuid_format(self, valid_product_data):
+        """Test: Validar provider_id con formato UUID inválido"""
+        valid_product_data['provider_id'] = 'invalid-uuid'
+        product = Product(**valid_product_data)
+        
+        with pytest.raises(ValueError, match="El ID del proveedor debe ser un UUID válido"):
+            product.validate()
+    
+    def test_validate_provider_id_empty(self, valid_product_data):
+        """Test: Validar provider_id vacío"""
+        valid_product_data['provider_id'] = ''
+        product = Product(**valid_product_data)
+        
+        with pytest.raises(ValueError, match="El ID del proveedor es obligatorio"):
+            product.validate()
+    
+    def test_validate_provider_id_none(self, valid_product_data):
+        """Test: Validar provider_id None"""
+        valid_product_data['provider_id'] = None
+        product = Product(**valid_product_data)
+        
+        with pytest.raises(ValueError, match="El ID del proveedor es obligatorio"):
+            product.validate()
+    
     def test_validate_photo_filename_valid(self, valid_product_data):
         """Test: Validar nombre de archivo de foto válido"""
         valid_extensions = ['test.jpg', 'test.jpeg', 'test.png', 'test.gif', 'TEST.JPG']
@@ -253,6 +292,7 @@ class TestProduct:
         assert product_dict['location'] == 'A-01-01'
         assert product_dict['description'] == 'Producto de prueba'
         assert product_dict['product_type'] == 'Alto valor'
+        assert product_dict['provider_id'] == '550e8400-e29b-41d4-a716-446655440000'
         assert product_dict['photo_filename'] == 'test.jpg'
         assert 'created_at' in product_dict
         assert 'updated_at' in product_dict
