@@ -1303,6 +1303,54 @@
       "name": "Crear Producto - Sin Imagen (Válido)",
       "event": [
         {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generar datos válidos para producto sin imagen",
+              "const skuNumber = Math.floor(Math.random() * 9000) + 1000;",
+              "const sku = `MED-${skuNumber}`;",
+              "",
+              "const nombres = [",
+              "    'Paracetamol 500mg',",
+              "    'Ibuprofeno 400mg',",
+              "    'Aspirina 100mg',",
+              "    'Omeprazol 20mg',",
+              "    'Amoxicilina 500mg'",
+              "];",
+              "",
+              "const tipos = ['Alto valor', 'Medio valor', 'Bajo valor'];",
+              "const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
+              "",
+              "const nombre = nombres[Math.floor(Math.random() * nombres.length)] + ' Sin Imagen';",
+              "const tipo = tipos[Math.floor(Math.random() * tipos.length)];",
+              "const ubicacion = ubicaciones[Math.floor(Math.random() * ubicaciones.length)];",
+              "",
+              "// Generar fecha de vencimiento futura",
+              "const fechaVencimiento = new Date();",
+              "fechaVencimiento.setDate(fechaVencimiento.getDate() + Math.floor(Math.random() * 700) + 30);",
+              "",
+              "const cantidad = Math.floor(Math.random() * 999) + 1;",
+              "const precio = Math.floor(Math.random() * 50000) + 5000;",
+              "",
+              "// Guardar variables",
+              "pm.environment.set('sku_sin_imagen', sku);",
+              "pm.environment.set('nombre_sin_imagen', nombre);",
+              "pm.environment.set('fecha_sin_imagen', fechaVencimiento.toISOString());",
+              "pm.environment.set('cantidad_sin_imagen', cantidad.toString());",
+              "pm.environment.set('precio_sin_imagen', precio.toString());",
+              "pm.environment.set('ubicacion_sin_imagen', ubicacion);",
+              "pm.environment.set('descripcion_sin_imagen', `Descripción del producto ${nombre}`);",
+              "pm.environment.set('tipo_sin_imagen', tipo);",
+              "",
+              "console.log('Datos generados para producto sin imagen:', {",
+              "    sku, nombre, fechaVencimiento: fechaVencimiento.toISOString(),",
+              "    cantidad, precio, ubicacion, tipo",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
           "listen": "test",
           "script": {
             "exec": [
@@ -1348,7 +1396,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"sku\": \"MED-{{$randomInt}}\",\n  \"name\": \"{{$randomProductName}} Sin Imagen\",\n  \"expiration_date\": \"{{$isoTimestamp}}\",\n  \"quantity\": {{$randomInt}},\n  \"price\": {{$randomFloat}},\n  \"location\": \"{{$randomAlpha}}-{{$randomInt}}\",\n  \"description\": \"{{$randomLoremSentence}} sin foto\",\n  \"product_type\": \"{{$randomArrayElement}}\"\n}"
+          "raw": "{\n  \"sku\": \"{{sku_sin_imagen}}\",\n  \"name\": \"{{nombre_sin_imagen}}\",\n  \"expiration_date\": \"{{fecha_sin_imagen}}\",\n  \"quantity\": {{cantidad_sin_imagen}},\n  \"price\": {{precio_sin_imagen}},\n  \"location\": \"{{ubicacion_sin_imagen}}\",\n  \"description\": \"{{descripcion_sin_imagen}}\",\n  \"product_type\": \"{{tipo_sin_imagen}}\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
