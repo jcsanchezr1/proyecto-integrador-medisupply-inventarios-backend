@@ -83,6 +83,7 @@
               "",
               "const cantidad = Math.floor(Math.random() * 999) + 1;",
               "const precio = Math.floor(Math.random() * 50000) + 5000;",
+              "const providerId = '550e8400-e29b-41d4-a716-446655440000';",
               "",
               "// Guardar variables para usar en el request",
               "pm.environment.set('sku_valido', sku);",
@@ -93,10 +94,11 @@
               "pm.environment.set('ubicacion_valida', ubicacion);",
               "pm.environment.set('descripcion_valida', `Descripcion del producto ${nombre}`);",
               "pm.environment.set('tipo_valido', tipo);",
+              "pm.environment.set('provider_id_valido', providerId.toString());",
               "",
               "console.log('Datos generados:', {",
               "    sku, nombre, fechaVencimiento: fechaVencimiento.toISOString(),",
-              "    cantidad, precio, ubicacion, tipo",
+              "    cantidad, precio, ubicacion, tipo, providerId",
               "});"
             ],
             "type": "text/javascript"
@@ -131,6 +133,8 @@
               "    pm.expect(response.message).to.include('registrado exitosamente');",
               "    pm.expect(response.data).to.have.property('sku');",
               "    pm.expect(response.data.sku).to.eql(pm.environment.get('sku_valido'));",
+              "    pm.expect(response.data).to.have.property('provider_id');",
+              "    pm.expect(response.data.provider_id).to.eql(pm.environment.get('provider_id_valido'));",
               "});",
               "",
               "// Guardar ID del producto para tests posteriores",
@@ -157,7 +161,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"{{sku_valido}}\",\n    \"name\": \"{{nombre_valido}}\",\n    \"expiration_date\": \"{{fecha_vencimiento_valida}}\",\n    \"quantity\": {{cantidad_valida}},\n    \"price\": {{precio_valido}},\n    \"location\": \"{{ubicacion_valida}}\",\n    \"description\": \"{{descripcion_valida}}\",\n    \"product_type\": \"{{tipo_valido}}\"\n}"
+          "raw": "{\n    \"sku\": \"{{sku_valido}}\",\n    \"name\": \"{{nombre_valido}}\",\n    \"expiration_date\": \"{{fecha_vencimiento_valida}}\",\n    \"quantity\": {{cantidad_valida}},\n    \"price\": {{precio_valido}},\n    \"location\": \"{{ubicacion_valida}}\",\n    \"description\": \"{{descripcion_valida}}\",\n    \"product_type\": \"{{tipo_valido}}\",\n    \"provider_id\": \"{{provider_id_valido}}\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -227,7 +231,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"{{sku_duplicado}}\",\n    \"name\": \"Producto Duplicado\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con SKU duplicado\",\n    \"product_type\": \"Medio valor\"\n}"
+          "raw": "{\n    \"sku\": \"{{sku_duplicado}}\",\n    \"name\": \"Producto Duplicado\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con SKU duplicado\",\n    \"product_type\": \"Medio valor\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -284,7 +288,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"MED-1234\",\n    \"name\": \"Producto Incompleto\"\n}"
+          "raw": "{\n    \"sku\": \"MED-1234\",\n    \"name\": \"Producto Incompleto\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -341,7 +345,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"INVALID-SKU\",\n    \"name\": \"Producto SKU Inválido\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con SKU inválido\",\n    \"product_type\": \"Medio valor\"\n}"
+          "raw": "{\n    \"sku\": \"INVALID-SKU\",\n    \"name\": \"Producto SKU Inválido\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con SKU inválido\",\n    \"product_type\": \"Medio valor\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -398,7 +402,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"MED-1111\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Medio valor\"\n}"
+          "raw": "{\n    \"sku\": \"MED-1111\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Medio valor\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -455,7 +459,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"MED-8888\",\n    \"name\": \"Producto Cantidad Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 0,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con cantidad invalida\",\n    \"product_type\": \"Medio valor\"\n}"
+          "raw": "{\n    \"sku\": \"MED-5555\",\n    \"name\": \"Producto Cantidad Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 0,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con cantidad invalida\",\n    \"product_type\": \"Medio valor\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -512,7 +516,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"sku\": \"MED-7777\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Medio valor\"\n}"
+          "raw": "{\n    \"sku\": \"MED-7777\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Medio valor\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -913,6 +917,7 @@
               "",
               "const cantidad = Math.floor(Math.random() * 999) + 1;",
               "const precio = Math.floor(Math.random() * 50000) + 5000;",
+              "const providerId = '550e8400-e29b-41d4-a716-446655440000';",
               "",
               "// Guardar variables para usar en el request",
               "pm.environment.set('sku_imagen', sku);",
@@ -923,10 +928,11 @@
               "pm.environment.set('ubicacion_imagen', ubicacion);",
               "pm.environment.set('descripcion_imagen', `Descripcion del producto ${nombre} con foto`);",
               "pm.environment.set('tipo_imagen', tipo);",
+              "pm.environment.set('provider_id_imagen', providerId.toString());",
               "",
               "console.log('Datos generados para producto con imagen:', {",
               "    sku, nombre, fechaVencimiento: fechaVencimiento.toISOString(),",
-              "    cantidad, precio, ubicacion, tipo",
+              "    cantidad, precio, ubicacion, tipo, providerId",
               "});"
             ],
             "type": "text/javascript"
@@ -1005,6 +1011,11 @@
             {
               "key": "product_type",
               "value": "{{tipo_imagen}}",
+              "type": "text"
+            },
+            {
+              "key": "provider_id",
+              "value": "{{provider_id_imagen}}",
               "type": "text"
             },
             {
@@ -1331,6 +1342,7 @@
               "",
               "const cantidad = Math.floor(Math.random() * 999) + 1;",
               "const precio = Math.floor(Math.random() * 50000) + 5000;",
+              "const providerId = '550e8400-e29b-41d4-a716-446655440000';",
               "",
               "// Guardar variables",
               "pm.environment.set('sku_sin_imagen', sku);",
@@ -1341,10 +1353,11 @@
               "pm.environment.set('ubicacion_sin_imagen', ubicacion);",
               "pm.environment.set('descripcion_sin_imagen', `Descripción del producto ${nombre}`);",
               "pm.environment.set('tipo_sin_imagen', tipo);",
+              "pm.environment.set('provider_id_sin_imagen', providerId.toString());",
               "",
               "console.log('Datos generados para producto sin imagen:', {",
               "    sku, nombre, fechaVencimiento: fechaVencimiento.toISOString(),",
-              "    cantidad, precio, ubicacion, tipo",
+              "    cantidad, precio, ubicacion, tipo, providerId",
               "});"
             ],
             "type": "text/javascript"
@@ -1396,7 +1409,65 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"sku\": \"{{sku_sin_imagen}}\",\n  \"name\": \"{{nombre_sin_imagen}}\",\n  \"expiration_date\": \"{{fecha_sin_imagen}}\",\n  \"quantity\": {{cantidad_sin_imagen}},\n  \"price\": {{precio_sin_imagen}},\n  \"location\": \"{{ubicacion_sin_imagen}}\",\n  \"description\": \"{{descripcion_sin_imagen}}\",\n  \"product_type\": \"{{tipo_sin_imagen}}\"\n}"
+          "raw": "{\n  \"sku\": \"{{sku_sin_imagen}}\",\n  \"name\": \"{{nombre_sin_imagen}}\",\n  \"expiration_date\": \"{{fecha_sin_imagen}}\",\n  \"quantity\": {{cantidad_sin_imagen}},\n  \"price\": {{precio_sin_imagen}},\n  \"location\": \"{{ubicacion_sin_imagen}}\",\n  \"description\": \"{{descripcion_sin_imagen}}\",\n  \"product_type\": \"{{tipo_sin_imagen}}\",\n  \"provider_id\": \"{{provider_id_sin_imagen}}\"\n}"
+        },
+        "url": {
+          "raw": "{{url_local_inventario}}/inventory/products",
+          "host": ["{{url_local_inventario}}"],
+          "path": ["inventory", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Producto - Provider ID Inválido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar que la respuesta sea JSON",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "",
+              "// Validar código de estado",
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "// Validar estructura de error",
+              "pm.test('Error response structure', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response).to.have.property('details');",
+              "    pm.expect(response.success).to.be.false;",
+              "});",
+              "",
+              "// Validar mensaje de error específico",
+              "pm.test('Error message mentions provider_id', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.details).to.include('proveedor');",
+              "});",
+              "",
+              "console.log('Error de validación de provider_id confirmado');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sku\": \"MED-9999\",\n    \"name\": \"Producto Provider ID Invalido\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con provider_id invalido\",\n    \"product_type\": \"Medio valor\",\n    \"provider_id\": \"invalid-uuid\"\n}"
         },
         "url": {
           "raw": "{{url_local_inventario}}/inventory/products",
@@ -1455,7 +1526,7 @@
   "variable": [
     {
       "key": "url_local_inventario",
-      "value": "http://localhost:8083",
+      "value": "http://localhost:8084",
       "type": "string"
     }
   ]

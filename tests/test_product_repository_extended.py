@@ -48,6 +48,7 @@ class TestProductRepositoryExtended:
         db_product.location = "A-01-01"
         db_product.description = "Test description"
         db_product.product_type = "Alto valor"
+        db_product.provider_id = '550e8400-e29b-41d4-a716-446655440000'
         db_product.photo_filename = "test.jpg"
         db_product.created_at = datetime.utcnow()
         db_product.updated_at = datetime.utcnow()
@@ -83,6 +84,7 @@ class TestProductRepositoryExtended:
             location="B-02-02",
             description="Updated description",
             product_type="Medio valor",
+            provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
         
@@ -120,6 +122,7 @@ class TestProductRepositoryExtended:
             location="B-02-02",
             description="Updated description",
             product_type="Medio valor",
+            provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
         
@@ -150,6 +153,7 @@ class TestProductRepositoryExtended:
             location="B-02-02",
             description="Updated description",
             product_type="Medio valor",
+            provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
         
@@ -181,6 +185,7 @@ class TestProductRepositoryExtended:
             location="B-02-02",
             description="Updated description",
             product_type="Medio valor",
+            provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
         
@@ -212,6 +217,7 @@ class TestProductRepositoryExtended:
             location="B-02-02",
             description="Updated description",
             product_type="Medio valor",
+            provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
         

@@ -72,7 +72,7 @@ Estructura básica preparada para escalar:
    docker-compose up --build
    ```
 
-2. **La aplicación estará disponible en:** `http://localhost:8083`
+2. **La aplicación estará disponible en:** `http://localhost:8084`
 
 3. **Verificar que todos los servicios estén ejecutándose:**
    ```bash
@@ -187,14 +187,14 @@ El proyecto incluye una colección de Postman completa con casos de prueba:
 
 ### Configuración
 
-La colección usa la variable `url_local_inventario` configurada por defecto en `http://localhost:8083`.
+La colección usa la variable `url_local_inventario` configurada por defecto en `http://localhost:8084`.
 
 ## Ejemplos de Uso de la API
 
 ### Crear un Producto
 
 ```bash
-curl -X POST http://localhost:8083/inventory/products \
+curl -X POST http://localhost:8084/inventory/products \
   -H "Content-Type: application/json" \
   -d '{
     "sku": "MED-1234",
@@ -211,25 +211,25 @@ curl -X POST http://localhost:8083/inventory/products \
 ### Obtener Todos los Productos
 
 ```bash
-curl -X GET http://localhost:8083/inventory/products
+curl -X GET http://localhost:8084/inventory/products
 ```
 
 ### Obtener Producto por ID
 
 ```bash
-curl -X GET http://localhost:8083/inventory/products/1
+curl -X GET http://localhost:8084/inventory/products/1
 ```
 
 ### Eliminar Producto
 
 ```bash
-curl -X DELETE http://localhost:8083/inventory/products/1
+curl -X DELETE http://localhost:8084/inventory/products/1
 ```
 
 ### Health Check
 
 ```bash
-curl -X GET http://localhost:8083/inventory/ping
+curl -X GET http://localhost:8084/inventory/ping
 ```
 
 ## Cloud Run
@@ -334,7 +334,7 @@ Este proyecto sigue la arquitectura de microservicios y está diseñado para int
 
 - **Autenticador**: Puerto 8081
 - **Proveedores**: Puerto 8082
-- **Inventarios**: Puerto 8083 (este servicio)
+- **Inventarios**: Puerto 8084 (este servicio)
 
 Todos los servicios comparten la misma base de datos PostgreSQL y están conectados a través de la red Docker `medisupply-net`.
 

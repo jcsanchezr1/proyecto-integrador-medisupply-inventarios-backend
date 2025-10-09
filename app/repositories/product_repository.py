@@ -30,6 +30,7 @@ class ProductDB(Base):
     location = Column(String(20), nullable=False)
     description = Column(Text, nullable=True)
     product_type = Column(String(50), nullable=False)
+    provider_id = Column(String(36), nullable=False)
     photo_filename = Column(String(255), nullable=True)
     photo_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -68,6 +69,7 @@ class ProductRepository(BaseRepository):
             location=db_product.location,
             description=db_product.description,
             product_type=db_product.product_type,
+            provider_id=db_product.provider_id,
             photo_filename=db_product.photo_filename,
             photo_url=db_product.photo_url
         )
@@ -83,6 +85,7 @@ class ProductRepository(BaseRepository):
             location=product.location,
             description=product.description,
             product_type=product.product_type,
+            provider_id=product.provider_id,
             photo_filename=product.photo_filename,
             photo_url=product.photo_url
         )
