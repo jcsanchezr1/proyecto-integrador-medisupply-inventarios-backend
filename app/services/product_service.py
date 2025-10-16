@@ -311,11 +311,22 @@ class ProductService:
         if not photo_file or not photo_file.filename:
             return None, None
         
+
+        photo_file.seek(0, 2)
+        file_size = photo_file.tell()
+        photo_file.seek(0)
+        
+        if file_size == 0:
+            raise ValidationError("El archivo está vacío")
+        
         try:
-            # Generar nombre único para el archivo
-            unique_filename = self.cloud_storage_service.generate_unique_filename(photo_file.filename, "product")
-            
-            # Subir imagen a Google Cloud Storage
+            import uuid
+            if not photo_file.filename or '.' not in photo_file.filename:
+                unique_filename = f"product_{uuid.uuid4()}.jpg"
+            else:
+                extension = photo_file.filename.lower().split('.')[-1]
+                unique_filename = f"product_{uuid.uuid4()}.{extension}"
+
             success, message, _ = self.cloud_storage_service.upload_image(
                 photo_file, unique_filename
             )

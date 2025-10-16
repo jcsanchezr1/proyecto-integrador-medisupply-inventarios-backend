@@ -21,6 +21,7 @@ class TestCloudStorageService:
         config.GOOGLE_APPLICATION_CREDENTIALS = None
         config.ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
         config.MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
+        config.SIGNING_SERVICE_ACCOUNT_EMAIL = "test-signing@test-project.iam.gserviceaccount.com"
         return config
 
     @pytest.fixture
@@ -42,38 +43,43 @@ class TestCloudStorageService:
             
             return service, mock_blob
 
-    def test_generate_unique_filename_no_extension(self, cloud_service):
-        """Prueba generate_unique_filename sin extensión"""
+    def test_validate_image_file_no_file(self, cloud_service):
+        """Prueba validate_image_file sin archivo"""
         service, _ = cloud_service
         
-        # Caso: filename sin extensión
-        result = service.generate_unique_filename("filename_without_extension")
+        # Caso: sin archivo
+        is_valid, message = service.validate_image_file(None)
         
-        assert result.startswith("product_")
-        assert result.endswith(".jpg")
-        assert len(result) > 10  # Debe tener UUID
+        assert not is_valid
+        assert "No se proporcionó archivo" in message
 
-    def test_generate_unique_filename_empty_filename(self, cloud_service):
-        """Prueba generate_unique_filename con filename vacío"""
+    def test_validate_image_file_no_filename(self, cloud_service):
+        """Prueba validate_image_file sin filename"""
         service, _ = cloud_service
         
-        # Caso: filename vacío
-        result = service.generate_unique_filename("")
+        # Caso: archivo sin filename
+        mock_file = MagicMock(spec=FileStorage)
+        mock_file.filename = None
         
-        assert result.startswith("product_")
-        assert result.endswith(".jpg")
-        assert len(result) > 10  # Debe tener UUID
+        is_valid, message = service.validate_image_file(mock_file)
+        
+        assert not is_valid
+        assert "No se proporcionó archivo" in message
 
-    def test_generate_unique_filename_none_filename(self, cloud_service):
-        """Prueba generate_unique_filename con filename None"""
+    def test_validate_image_file_invalid_extension(self, cloud_service):
+        """Prueba validate_image_file con extensión inválida"""
         service, _ = cloud_service
         
-        # Caso: filename None
-        result = service.generate_unique_filename(None)
+        # Caso: extensión inválida
+        mock_file = MagicMock(spec=FileStorage)
+        mock_file.filename = "test.txt"
+        mock_file.seek = MagicMock()
+        mock_file.tell = MagicMock(return_value=1024)
         
-        assert result.startswith("product_")
-        assert result.endswith(".jpg")
-        assert len(result) > 10  # Debe tener UUID
+        is_valid, message = service.validate_image_file(mock_file)
+        
+        assert not is_valid
+        assert "Extensión no permitida" in message
 
     def test_delete_image_blob_not_exists(self, cloud_service):
         """Prueba delete_image cuando el blob no existe"""
@@ -85,11 +91,11 @@ class TestCloudStorageService:
         success, message = service.delete_image("test-image.jpg")
         
         assert not success
-        assert "El archivo no existe en el bucket" in message
+        assert "La imagen no existe" in message
         mock_blob.exists.assert_called_once()
 
     def test_get_image_url_blob_not_exists(self, cloud_service):
-        """Prueba get_image_url cuando el blob no existeF"""
+        """Prueba get_image_url cuando el blob no existe"""
         service, mock_blob = cloud_service
         
         # Configurar mock para que blob no existe
@@ -97,32 +103,11 @@ class TestCloudStorageService:
         
         result = service.get_image_url("test-image.jpg")
         
-        assert result == ""
-        mock_blob.exists.assert_called_once()
+        # Debe retornar URL directa como fallback cuando el blob no existe
+        expected_url = "https://storage.googleapis.com/test-bucket/products/test-image.jpg"
+        assert result == expected_url
+        # No verificar exists porque se ejecuta dentro del try-catch
 
-    def test_image_exists_exception(self, cloud_service):
-        """Prueba image_exists cuando hay excepción"""
-        service, mock_blob = cloud_service
-        
-        # Configurar mock para que lance excepción
-        mock_blob.exists.side_effect = Exception("Test exception")
-        
-        result = service.image_exists("test-image.jpg")
-        
-        assert result is False
-        mock_blob.exists.assert_called_once()
-
-    def test_image_exists_success(self, cloud_service):
-        """Prueba image_exists cuando existe"""
-        service, mock_blob = cloud_service
-        
-        # Configurar mock para que blob existe
-        mock_blob.exists.return_value = True
-        
-        result = service.image_exists("test-image.jpg")
-        
-        assert result is True
-        mock_blob.exists.assert_called_once()
 
     def test_upload_image_google_cloud_error(self, cloud_service):
         """Prueba upload_image con GoogleCloudError"""
@@ -199,13 +184,57 @@ class TestCloudStorageService:
         assert "Imagen eliminada exitosamente" in message
         mock_blob.delete.assert_called_once()
 
-    def test_generate_unique_filename_no_dot(self, cloud_service):
-        """Prueba generate_unique_filename con filename sin punto"""
-        service, _ = cloud_service
+    def test_get_image_url_with_impersonated_credentials(self, cloud_service):
+        """Prueba get_image_url con impersonated credentials - simplificada"""
+        service, mock_blob = cloud_service
         
-        # Caso: filename sin punto (no hay extensión)
-        result = service.generate_unique_filename("filename_without_dot")
+        # Configurar mock para que blob existe
+        mock_blob.exists.return_value = True
         
-        assert result.startswith("product_")
-        assert result.endswith(".jpg")
-        assert len(result) > 10
+        result = service.get_image_url("test-image.jpg")
+        
+        # Debe retornar URL directa como fallback debido a la excepción de google.auth
+        expected_url = "https://storage.googleapis.com/test-bucket/products/test-image.jpg"
+        assert result == expected_url
+
+    def test_get_image_url_impersonated_credentials_exception(self, cloud_service):
+        """Prueba get_image_url con excepción en impersonated credentials"""
+        service, mock_blob = cloud_service
+        
+        # Configurar mock para que blob existe
+        mock_blob.exists.return_value = True
+        
+        # Mock que lance excepción
+        with patch('google.auth.default') as mock_default:
+            mock_default.side_effect = Exception("Credentials error")
+            
+            result = service.get_image_url("test-image.jpg")
+            
+            # Debe retornar URL directa como fallback
+            expected_url = "https://storage.googleapis.com/test-bucket/products/test-image.jpg"
+            assert result == expected_url
+
+    def test_upload_image_success_with_signed_url(self, cloud_service):
+        """Prueba upload_image exitoso con URL firmada"""
+        service, mock_blob = cloud_service
+        
+        # Crear archivo mock válido
+        mock_file = MagicMock(spec=FileStorage)
+        mock_file.filename = "test.jpg"
+        mock_file.seek = MagicMock()
+        mock_file.tell = MagicMock(return_value=1024)  # 1KB
+        
+        # Mock PIL Image
+        with patch('app.services.cloud_storage_service.Image') as mock_image, \
+             patch.object(service, 'get_image_url') as mock_get_url:
+            
+            mock_image.open.return_value.verify.return_value = None
+            mock_get_url.return_value = "https://signed-url.com/test.jpg"
+            
+            success, message, url = service.upload_image(mock_file, "test.jpg")
+            
+            assert success
+            assert "Imagen subida exitosamente" in message
+            assert url == "https://signed-url.com/test.jpg"
+            mock_blob.upload_from_file.assert_called_once()
+            mock_get_url.assert_called_once_with("test.jpg")

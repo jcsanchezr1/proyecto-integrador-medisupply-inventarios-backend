@@ -26,12 +26,10 @@ class Config:
     BUCKET_FOLDER = os.getenv('BUCKET_FOLDER', 'products')
     BUCKET_LOCATION = os.getenv('BUCKET_LOCATION', 'us-central1')
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '/app/credentials/gcp-credentials.json')
-    
-    # Configuración de archivos de imagen
+    SIGNING_SERVICE_ACCOUNT_EMAIL = os.getenv('SIGNING_SERVICE_ACCOUNT_EMAIL', '')
+
     ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
-    
-    # Configuración de servicios externos
     PROVIDERS_SERVICE_URL = os.getenv('PROVIDERS_SERVICE_URL', 'http://localhost:8083')
 
 

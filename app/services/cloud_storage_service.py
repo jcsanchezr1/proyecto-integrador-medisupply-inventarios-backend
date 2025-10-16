@@ -3,6 +3,7 @@ Servicio de Google Cloud Storage para manejo de imágenes
 """
 import os
 import uuid
+import logging
 from typing import Optional, Tuple
 from werkzeug.datastructures import FileStorage
 from google.cloud import storage
@@ -12,14 +13,18 @@ import io
 
 from ..config.settings import Config
 
+logger = logging.getLogger(__name__)
+
 
 class CloudStorageService:
     """Servicio para manejar operaciones con Google Cloud Storage"""
-    
+
     def __init__(self, config: Config = None):
         self.config = config or Config()
         self._client = None
         self._bucket = None
+        
+        logger.info(f"CloudStorageService inicializado - Bucket: {self.config.BUCKET_NAME}, Folder: {self.config.BUCKET_FOLDER}")
     
     @property
     def client(self) -> storage.Client:
@@ -49,7 +54,7 @@ class CloudStorageService:
     
     def validate_image_file(self, file: FileStorage) -> Tuple[bool, str]:
         """
-        Valida que el archivo sea una imagen válida
+        Valida un archivo de imagen
         
         Args:
             file: Archivo a validar
@@ -65,49 +70,30 @@ class CloudStorageService:
             return False, "El archivo no tiene extensión"
         
         extension = file.filename.lower().split('.')[-1]
-        if extension not in self.config.ALLOWED_EXTENSIONS:
-            return False, f"Extensión no permitida. Use: {', '.join(self.config.ALLOWED_EXTENSIONS)}"
+        allowed_extensions = {'jpg', 'jpeg', 'png', 'gif'}
         
-        # Verificar tamaño del archivo
+        if extension not in allowed_extensions:
+            return False, f"Extensión no permitida. Use: {', '.join(allowed_extensions)}"
+        
+        # Verificar tamaño
         file.seek(0, 2)  # Ir al final del archivo
         file_size = file.tell()
         file.seek(0)  # Volver al inicio
         
-        if file_size == 0:
-            return False, "El archivo está vacío"
+        max_size = self.config.MAX_CONTENT_LENGTH
+        if file_size > max_size:
+            return False, f"El archivo es demasiado grande. Máximo: {max_size // (1024*1024)}MB"
         
-        if file_size > self.config.MAX_CONTENT_LENGTH:
-            max_mb = self.config.MAX_CONTENT_LENGTH / (1024 * 1024)
-            return False, f"El archivo es demasiado grande. Máximo: {max_mb}MB"
-        
-        # Verificar que sea una imagen válida usando PIL
+        # Verificar que sea una imagen válida
         try:
             file.seek(0)
-            image = Image.open(file)
-            image.verify()  # Verificar que sea una imagen válida
-            file.seek(0)  # Volver al inicio
-        except Exception as e:
-            return False, f"El archivo no es una imagen válida: {str(e)}"
+            with Image.open(file) as img:
+                img.verify()
+            file.seek(0)
+        except Exception:
+            return False, "El archivo no es una imagen válida"
         
-        return True, ""
-    
-    def generate_unique_filename(self, original_filename: str, prefix: str = "product") -> str:
-        """
-        Genera un nombre único para el archivo
-        
-        Args:
-            original_filename: Nombre original del archivo
-            prefix: Prefijo para el nombre del archivo
-            
-        Returns:
-            str: Nombre único del archivo
-        """
-        if not original_filename or '.' not in original_filename:
-            return f"{prefix}_{uuid.uuid4()}.jpg"
-        
-        extension = original_filename.lower().split('.')[-1]
-        unique_id = str(uuid.uuid4())
-        return f"{prefix}_{unique_id}.{extension}"
+        return True, "Archivo válido"
     
     def upload_image(self, file: FileStorage, filename: str) -> Tuple[bool, str, Optional[str]]:
         """
@@ -144,10 +130,12 @@ class CloudStorageService:
             file.seek(0)
             blob.upload_from_file(file, content_type=blob.metadata['content_type'])
             
-            # Generar URL pública
-            public_url = f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{full_path}"
+            # Generar URL firmada
+            signed_url = self.get_image_url(filename)
             
-            return True, "Imagen subida exitosamente", public_url
+            logger.info(f"Imagen subida exitosamente - Filename: {filename}, URL firmada generada")
+            
+            return True, "Imagen subida exitosamente", signed_url
             
         except GoogleCloudError as e:
             return False, f"Error de Google Cloud Storage: {str(e)}", None
@@ -165,69 +153,63 @@ class CloudStorageService:
             Tuple[bool, str]: (éxito, mensaje)
         """
         try:
-            # Crear ruta completa con carpeta
             full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
             blob = self.bucket.blob(full_path)
             
-            if not blob.exists():
-                return False, "El archivo no existe en el bucket"
-            
-            blob.delete()
-            return True, "Imagen eliminada exitosamente"
-            
+            if blob.exists():
+                blob.delete()
+                return True, "Imagen eliminada exitosamente"
+            else:
+                return False, "La imagen no existe"
+                
         except GoogleCloudError as e:
             return False, f"Error de Google Cloud Storage: {str(e)}"
         except Exception as e:
             return False, f"Error al eliminar imagen: {str(e)}"
     
-    def get_image_url(self, filename: str, expiration_hours: int = 2160) -> str:
+    def get_image_url(self, filename: str, expiration_hours: int = 168) -> str:
         """
-        Obtiene la URL firmada de una imagen
+        Genera una URL firmada de una imagen en Cloud Storage usando impersonated credentials (Cloud Run safe)
         
         Args:
             filename: Nombre del archivo
-            expiration_hours: Horas de validez de la URL (default: 2160 = 3 meses)
+            expiration_hours: Horas de validez de la URL (default: 168 = 7 días, máximo permitido)
             
         Returns:
             str: URL firmada de la imagen
         """
         try:
-            from datetime import datetime, timedelta
+            from datetime import datetime, timedelta, timezone
+            from google.auth import default, impersonated_credentials
             
             full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
             blob = self.bucket.blob(full_path)
-            
-            # Verificar que el blob existe
+
             if not blob.exists():
+                logger.warning(f"El archivo {filename} no existe en el bucket")
                 return ""
-            
-            # Generar URL firmada con expiración
-            expiration = datetime.utcnow() + timedelta(hours=expiration_hours)
+
+            expiration = datetime.now(timezone.utc) + timedelta(hours=expiration_hours)
+
+            source_credentials, _ = default()
+
+            target_credentials = impersonated_credentials.Credentials(
+                source_credentials=source_credentials,
+                target_principal=self.config.SIGNING_SERVICE_ACCOUNT_EMAIL,
+                target_scopes=["https://www.googleapis.com/auth/devstorage.read_only"],
+                lifetime=300,
+            )
+
             signed_url = blob.generate_signed_url(
                 expiration=expiration,
-                method='GET'
+                method="GET",
+                version="v4",
+                credentials=target_credentials,
             )
-            
+
+            logger.info(f"URL firmada generada para {filename}")
             return signed_url
-            
+
         except Exception as e:
-            # Fallback a URL directa si hay error
-            full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
-            return f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{full_path}"
-    
-    def image_exists(self, filename: str) -> bool:
-        """
-        Verifica si una imagen existe en el bucket
-        
-        Args:
-            filename: Nombre del archivo
-            
-        Returns:
-            bool: True si existe, False en caso contrario
-        """
-        try:
-            full_path = f"{self.config.BUCKET_FOLDER}/{filename}"
-            blob = self.bucket.blob(full_path)
-            return blob.exists()
-        except Exception:
-            return False
+            logger.error(f"Error al generar URL firmada para {filename}: {e}")
+            return f"https://storage.googleapis.com/{self.config.BUCKET_NAME}/{self.config.BUCKET_FOLDER}/{filename}"
