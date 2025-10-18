@@ -25,7 +25,7 @@ class Config:
     BUCKET_NAME = os.getenv('BUCKET_NAME', 'medisupply-images-bucket')
     BUCKET_FOLDER = os.getenv('BUCKET_FOLDER', 'products')
     BUCKET_LOCATION = os.getenv('BUCKET_LOCATION', 'us-central1')
-    GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '/app/credentials/gcp-credentials.json')
+    GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '')
     SIGNING_SERVICE_ACCOUNT_EMAIL = os.getenv('SIGNING_SERVICE_ACCOUNT_EMAIL', '')
 
     ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
