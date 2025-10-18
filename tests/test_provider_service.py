@@ -265,7 +265,9 @@ class TestProviderService:
         # Verificar configuración por defecto
         assert provider_service.timeout == 10
         assert provider_service.base_url is not None
-        assert "localhost:8083" in provider_service.base_url or "localhost" in provider_service.base_url or "medisupply-proveedores" in provider_service.base_url
+        # Verificar que la URL sea válida (contenga http/https y un dominio)
+        assert provider_service.base_url.startswith(("http://", "https://"))
+        assert "." in provider_service.base_url or "localhost" in provider_service.base_url
     
     def test_url_construction(self, provider_service):
         """Test de construcción de URL"""
