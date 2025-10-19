@@ -71,7 +71,8 @@ class ProviderProductsService:
             product_data = {
                 "name": product.name,
                 "quantity": product.quantity,
-                "price": product.price
+                "price": product.price,
+                "photo_url": product.photo_url
             }
             
             products_by_provider[provider_id].append(product_data)
