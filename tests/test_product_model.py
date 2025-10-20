@@ -74,6 +74,21 @@ class TestProduct:
         product = Product(**valid_product_data)
         product.validate()  # No debe lanzar excepción
     
+    def test_validate_name_with_accents(self, valid_product_data):
+        """Test: Validar nombre con tildes válidas"""
+        test_cases = [
+            'Paracetamol',
+            'Medicamento Oncológico',
+            'Insulina Regular',
+            'Antibiótico Amoxicilina',
+            'Analgésico Ibuprofeno'
+        ]
+        
+        for valid_name in test_cases:
+            valid_product_data['name'] = valid_name
+            product = Product(**valid_product_data)
+            product.validate()  # No debe lanzar excepción
+    
     def test_validate_name_empty(self, valid_product_data):
         """Test: Validar nombre vacío"""
         valid_product_data['name'] = ''
@@ -98,7 +113,7 @@ class TestProduct:
             valid_product_data['name'] = invalid_name
             product = Product(**valid_product_data)
             
-            with pytest.raises(ValueError, match="El nombre debe contener únicamente caracteres alfanuméricos y espacios"):
+            with pytest.raises(ValueError, match="El nombre debe contener únicamente caracteres alfanuméricos, espacios y tildes"):
                 product.validate()
     
     def test_validate_expiration_date_valid(self, valid_product_data):

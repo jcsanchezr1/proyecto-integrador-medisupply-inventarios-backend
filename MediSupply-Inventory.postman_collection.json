@@ -556,7 +556,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"sku\": \"MED-2222\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+					"raw": "{\n    \"sku\": \"MED-7777\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
 				},
 				"url": {
 					"raw": "{{url_local_inventario}}/inventory/products",
@@ -694,7 +694,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"sku\": \"MED-3333\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+					"raw": "{\n    \"sku\": \"MED-8888\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
 				},
 				"url": {
 					"raw": "{{url_local_inventario}}/inventory/products",
