@@ -83,7 +83,7 @@ class TestProductRepositoryExtended:
             price=20000.0,
             location="B-02-02",
             description="Updated description",
-            product_type="Medio valor",
+            product_type="Seguridad",
             provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
@@ -104,7 +104,7 @@ class TestProductRepositoryExtended:
             assert db_product.price == 20000.0
             assert db_product.location == "B-02-02"
             assert db_product.description == "Updated description"
-            assert db_product.product_type == "Medio valor"
+            assert db_product.product_type == "Seguridad"
             assert db_product.photo_filename == "updated.jpg"
             mock_session.commit.assert_called_once()
             mock_session.close.assert_called_once()
@@ -121,7 +121,7 @@ class TestProductRepositoryExtended:
             price=20000.0,
             location="B-02-02",
             description="Updated description",
-            product_type="Medio valor",
+            product_type="Seguridad",
             provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
@@ -152,7 +152,7 @@ class TestProductRepositoryExtended:
             price=20000.0,
             location="B-02-02",
             description="Updated description",
-            product_type="Medio valor",
+            product_type="Seguridad",
             provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
@@ -184,7 +184,7 @@ class TestProductRepositoryExtended:
             price=20000.0,
             location="B-02-02",
             description="Updated description",
-            product_type="Medio valor",
+            product_type="Seguridad",
             provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )
@@ -216,7 +216,7 @@ class TestProductRepositoryExtended:
             price=20000.0,
             location="B-02-02",
             description="Updated description",
-            product_type="Medio valor",
+            product_type="Seguridad",
             provider_id="550e8400-e29b-41d4-a716-446655440000",
             photo_filename="updated.jpg"
         )

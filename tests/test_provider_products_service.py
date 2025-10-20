@@ -24,7 +24,7 @@ class TestProviderProductsService:
                 price=5000.0,
                 location="A-01-01",
                 description="Analgésico",
-                product_type="Bajo valor",
+                product_type="Cadena fría",
                 provider_id="32892e80-fbf9-4c7f-b211-228b3aa43985"
             ),
             Product(
@@ -35,7 +35,7 @@ class TestProviderProductsService:
                 price=8000.0,
                 location="A-01-02",
                 description="Antiinflamatorio",
-                product_type="Medio valor",
+                product_type="Seguridad",
                 provider_id="32892e80-fbf9-4c7f-b211-228b3aa43985"
             ),
             Product(
@@ -158,7 +158,7 @@ class TestProviderProductsService:
                 price=5000.0,
                 location="A-01-01",
                 description="Test",
-                product_type="Bajo valor",
+                product_type="Cadena fría",
                 provider_id="provider-1"
             ),
             Product(
@@ -169,7 +169,7 @@ class TestProviderProductsService:
                 price=8000.0,
                 location="A-01-02",
                 description="Test",
-                product_type="Medio valor",
+                product_type="Seguridad",
                 provider_id="provider-1"
             ),
             Product(
