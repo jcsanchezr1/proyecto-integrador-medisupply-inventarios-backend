@@ -117,7 +117,7 @@ Estructura básica preparada para escalar:
 ### Validaciones de Producto
 
 - **SKU**: Formato "MED-XXXX" (4 dígitos numéricos), único
-- **Nombre**: Alfanumérico y espacios, mínimo 3 caracteres
+- **Nombre**: Alfanumérico, espacios y tildes, mínimo 3 caracteres
 - **Fecha de vencimiento**: Debe ser futura
 - **Cantidad**: Entero positivo (1-9999)
 - **Precio**: Numérico positivo en COP

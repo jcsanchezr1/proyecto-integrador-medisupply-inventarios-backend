@@ -20,7 +20,7 @@ class Product(BaseModel):
         
         Args:
             sku: Código único del producto (formato MED-XXXX)
-            name: Nombre del producto
+            name: Nombre del producto (alfanumérico, espacios y tildes)
             expiration_date: Fecha de vencimiento
             quantity: Cantidad disponible
             price: Precio unitario en COP
@@ -71,16 +71,16 @@ class Product(BaseModel):
             raise ValueError("El SKU debe seguir el formato MED-XXXX (4 dígitos numéricos)")
     
     def _validate_name(self) -> None:
-        """Valida nombre: alfanumérico y espacios, mínimo 3 caracteres"""
+        """Valida nombre: alfanumérico, espacios y tildes, mínimo 3 caracteres"""
         if not self.name:
             raise ValueError("El nombre es obligatorio")
         
         if len(self.name.strip()) < 3:
             raise ValueError("El nombre debe tener al menos 3 caracteres")
         
-        name_pattern = r'^[a-zA-Z0-9\s]+$'
+        name_pattern = r'^[a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑüÜ]+$'
         if not re.match(name_pattern, self.name):
-            raise ValueError("El nombre debe contener únicamente caracteres alfanuméricos y espacios")
+            raise ValueError("El nombre debe contener únicamente caracteres alfanuméricos, espacios y tildes")
     
     def _validate_expiration_date(self) -> None:
         """Valida fecha de vencimiento: debe ser futura"""
