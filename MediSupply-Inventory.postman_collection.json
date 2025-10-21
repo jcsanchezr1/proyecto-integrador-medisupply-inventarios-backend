@@ -2238,6 +2238,737 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Filtros - Filtrar por SKU",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response).to.have.property('message');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar estructura de datos",
+							"pm.test('Data structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data).to.have.property('products');",
+							"    pm.expect(response.data).to.have.property('filters_applied');",
+							"    pm.expect(response.data).to.have.property('pagination');",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied).to.have.property('sku');",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"});",
+							"",
+							"// Guardar datos para tests posteriores",
+							"pm.test('Save filter data', function () {",
+							"    const response = pm.response.json();",
+							"    if (response.data.products && response.data.products.length > 0) {",
+							"        pm.environment.set('filtered_product_id', response.data.products[0].id);",
+							"        pm.environment.set('filtered_product_sku', response.data.products[0].sku);",
+							"        pm.environment.set('filtered_product_name', response.data.products[0].name);",
+							"        pm.environment.set('filtered_product_quantity', response.data.products[0].quantity);",
+							"        pm.environment.set('filtered_product_price', response.data.products[0].price);",
+							"        pm.environment.set('filtered_product_location', response.data.products[0].location);",
+							"        pm.environment.set('filtered_product_expiration_date', response.data.products[0].expiration_date);",
+							"    }",
+							"});",
+							"",
+							"console.log('Filtro por SKU verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar productos cuyo SKU contenga 'MED'"
+						}
+					]
+				},
+				"description": "Filtrar productos por SKU que contenga 'MED'"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Filtrar por Nombre",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied).to.have.property('name');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"});",
+							"",
+							"console.log('Filtro por nombre verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?name=Paracetamol",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar productos cuyo nombre contenga 'Paracetamol'"
+						}
+					]
+				},
+				"description": "Filtrar productos por nombre que contenga 'Paracetamol'"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Combinación de 2 Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Multiple filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"    pm.expect(response.data.filters_applied.quantity).to.be.null;",
+							"    pm.expect(response.data.filters_applied.price).to.be.null;",
+							"    pm.expect(response.data.filters_applied.location).to.be.null;",
+							"    pm.expect(response.data.filters_applied.expiration_date).to.be.null;",
+							"});",
+							"",
+							"console.log('Combinación de 2 filtros verificada exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&name=Paracetamol",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar por nombre que contenga 'Paracetamol'"
+						}
+					]
+				},
+				"description": "Combinar filtros por SKU y nombre"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Combinación de 3 Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Three filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"    pm.expect(response.data.filters_applied.quantity).to.eql(100);",
+							"    pm.expect(response.data.filters_applied.price).to.be.null;",
+							"    pm.expect(response.data.filters_applied.location).to.be.null;",
+							"    pm.expect(response.data.filters_applied.expiration_date).to.be.null;",
+							"});",
+							"",
+							"console.log('Combinación de 3 filtros verificada exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&name=Paracetamol&quantity=100",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar por nombre que contenga 'Paracetamol'"
+						},
+						{
+							"key": "quantity",
+							"value": "100",
+							"description": "Filtrar por cantidad exacta de 100"
+						}
+					]
+				},
+				"description": "Combinar filtros por SKU, nombre y cantidad"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Todos los Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar todos los filtros aplicados",
+							"pm.test('All filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"    pm.expect(response.data.filters_applied.quantity).to.eql(100);",
+							"    pm.expect(response.data.filters_applied.price).to.eql(15.5);",
+							"    pm.expect(response.data.filters_applied.location).to.eql('A-01');",
+							"    pm.expect(response.data.filters_applied.expiration_date).to.eql('2025-12-31');",
+							"});",
+							"",
+							"console.log('Todos los filtros verificados exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&name=Paracetamol&quantity=100&price=15.50&location=A-01&expiration_date=2025-12-31",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar por nombre que contenga 'Paracetamol'"
+						},
+						{
+							"key": "quantity",
+							"value": "100",
+							"description": "Filtrar por cantidad exacta de 100"
+						},
+						{
+							"key": "price",
+							"value": "15.50",
+							"description": "Filtrar por precio exacto de 15.50"
+						},
+						{
+							"key": "location",
+							"value": "A-01",
+							"description": "Filtrar por ubicación que contenga 'A-01'"
+						},
+						{
+							"key": "expiration_date",
+							"value": "2025-12-31",
+							"description": "Filtrar por fecha de vencimiento exacta"
+						}
+					]
+				},
+				"description": "Combinar todos los filtros disponibles"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Con Paginación",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar paginación",
+							"pm.test('Pagination structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.pagination).to.have.property('page');",
+							"    pm.expect(response.data.pagination).to.have.property('per_page');",
+							"    pm.expect(response.data.pagination).to.have.property('total');",
+							"    pm.expect(response.data.pagination).to.have.property('total_pages');",
+							"    pm.expect(response.data.pagination).to.have.property('has_next');",
+							"    pm.expect(response.data.pagination).to.have.property('has_prev');",
+							"});",
+							"",
+							"// Validar parámetros de paginación",
+							"pm.test('Pagination parameters', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.pagination.page).to.eql(1);",
+							"    pm.expect(response.data.pagination.per_page).to.eql(5);",
+							"});",
+							"",
+							"console.log('Filtros con paginación verificados exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&page=1&per_page=5",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Página 1"
+						},
+						{
+							"key": "per_page",
+							"value": "5",
+							"description": "5 elementos por página"
+						}
+					]
+				},
+				"description": "Filtrar productos con paginación"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error Sin Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about missing filters', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('Debe proporcionar al menos un filtro');",
+							"});",
+							"",
+							"console.log('Error sin filtros verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					]
+				},
+				"description": "Error al no proporcionar ningún filtro"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error Formato Fecha Inválido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about date format', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('formato de \\'expiration_date\\' debe ser YYYY-MM-DD');",
+							"});",
+							"",
+							"console.log('Error formato fecha inválido verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?expiration_date=31-12-2024",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "expiration_date",
+							"value": "31-12-2024",
+							"description": "Formato de fecha inválido (DD-MM-YYYY)"
+						}
+					]
+				},
+				"description": "Error con formato de fecha inválido"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error Página Inválida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid page', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('parámetro \\'page\\' debe ser mayor a 0');",
+							"});",
+							"",
+							"console.log('Error página inválida verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&page=0",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"description": "Página inválida (debe ser ≥ 1)"
+						}
+					]
+				},
+				"description": "Error con página inválida (0)"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error per_page Inválido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid per_page', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('parámetro \\'per_page\\' debe estar entre 1 y 100');",
+							"});",
+							"",
+							"console.log('Error per_page inválido verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&per_page=150",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "per_page",
+							"value": "150",
+							"description": "per_page inválido (debe ser 1-100)"
+						}
+					]
+				},
+				"description": "Error con per_page inválido (> 100)"
+			},
+			"response": []
 		}
 	],
 	"variable": [

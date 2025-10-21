@@ -173,13 +173,22 @@ class ProductRepository(BaseRepository):
         finally:
             session.close()
     
-    def get_all(self, limit: Optional[int] = None, offset: int = 0) -> List[Product]:
+    def get_all(self, limit: Optional[int] = None, offset: int = 0, 
+                sku: Optional[str] = None, name: Optional[str] = None, 
+                expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+                price: Optional[float] = None, location: Optional[str] = None) -> List[Product]:
         """
-        Obtiene todos los productos con paginación
+        Obtiene todos los productos con paginación y filtros opcionales
         
         Args:
             limit: Límite de productos a obtener (opcional)
             offset: Desplazamiento para paginación
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
             
         Returns:
             List[Product]: Lista de productos
@@ -190,6 +199,22 @@ class ProductRepository(BaseRepository):
         session = self._get_session()
         try:
             query = session.query(ProductDB)
+            
+            # Aplicar filtros
+            if sku:
+                query = query.filter(ProductDB.sku.ilike(f'%{sku}%'))
+            if name:
+                query = query.filter(ProductDB.name.ilike(f'%{name}%'))
+            if expiration_date:
+                query = query.filter(ProductDB.expiration_date == expiration_date)
+            if quantity is not None:
+                query = query.filter(ProductDB.quantity == quantity)
+            if price is not None:
+                query = query.filter(ProductDB.price == price)
+            if location:
+                query = query.filter(ProductDB.location.ilike(f'%{location}%'))
+            
+            # Aplicar paginación
             if limit:
                 query = query.limit(limit)
             if offset:
@@ -293,10 +318,20 @@ class ProductRepository(BaseRepository):
         finally:
             session.close()
     
-    def count(self) -> int:
+    def count(self, sku: Optional[str] = None, name: Optional[str] = None, 
+              expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+              price: Optional[float] = None, location: Optional[str] = None) -> int:
         """
-        Cuenta el total de productos
+        Cuenta el total de productos con filtros opcionales
         
+        Args:
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
+            
         Returns:
             int: Número total de productos
             
@@ -305,7 +340,23 @@ class ProductRepository(BaseRepository):
         """
         session = self._get_session()
         try:
-            return session.query(ProductDB).count()
+            query = session.query(ProductDB)
+            
+            # Aplicar filtros
+            if sku:
+                query = query.filter(ProductDB.sku.ilike(f'%{sku}%'))
+            if name:
+                query = query.filter(ProductDB.name.ilike(f'%{name}%'))
+            if expiration_date:
+                query = query.filter(ProductDB.expiration_date == expiration_date)
+            if quantity is not None:
+                query = query.filter(ProductDB.quantity == quantity)
+            if price is not None:
+                query = query.filter(ProductDB.price == price)
+            if location:
+                query = query.filter(ProductDB.location.ilike(f'%{location}%'))
+            
+            return query.count()
         except SQLAlchemyError as e:
             raise Exception(f"Error al contar productos: {str(e)}")
         finally:
