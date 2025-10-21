@@ -107,13 +107,22 @@ class ProductService:
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener producto por SKU: {str(e)}")
     
-    def get_all_products(self, limit: Optional[int] = None, offset: int = 0) -> List[Product]:
+    def get_all_products(self, limit: Optional[int] = None, offset: int = 0,
+                        sku: Optional[str] = None, name: Optional[str] = None,
+                        expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+                        price: Optional[float] = None, location: Optional[str] = None) -> List[Product]:
         """
-        Obtiene todos los productos con paginación
+        Obtiene todos los productos con paginación y filtros opcionales
         
         Args:
             limit: Límite de productos a obtener (opcional)
             offset: Desplazamiento para paginación
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
             
         Returns:
             List[Product]: Lista de productos
@@ -122,7 +131,11 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            products = self.product_repository.get_all(limit=limit, offset=offset)
+            products = self.product_repository.get_all(
+                limit=limit, offset=offset, sku=sku, name=name,
+                expiration_date=expiration_date, quantity=quantity,
+                price=price, location=location
+            )
             # Generar URLs para todos los productos que tengan foto
             for product in products:
                 if product.photo_filename:
@@ -131,13 +144,22 @@ class ProductService:
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener productos: {str(e)}")
     
-    def get_products_summary(self, limit: Optional[int] = None, offset: int = 0) -> List[Dict[str, Any]]:
+    def get_products_summary(self, limit: Optional[int] = None, offset: int = 0,
+                            sku: Optional[str] = None, name: Optional[str] = None,
+                            expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+                            price: Optional[float] = None, location: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Obtiene un resumen de productos para listado con paginación
+        Obtiene un resumen de productos para listado con paginación y filtros opcionales
         
         Args:
             limit: Límite de productos a obtener (opcional)
             offset: Desplazamiento para paginación
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
             
         Returns:
             List[Dict[str, Any]]: Lista de diccionarios con datos básicos de productos
@@ -146,15 +168,29 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            products = self.get_all_products(limit=limit, offset=offset)
+            products = self.get_all_products(
+                limit=limit, offset=offset, sku=sku, name=name,
+                expiration_date=expiration_date, quantity=quantity,
+                price=price, location=location
+            )
             return [product.to_dict() for product in products]
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener resumen de productos: {str(e)}")
     
-    def get_products_count(self) -> int:
+    def get_products_count(self, sku: Optional[str] = None, name: Optional[str] = None,
+                          expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+                          price: Optional[float] = None, location: Optional[str] = None) -> int:
         """
-        Obtiene el total de productos
+        Obtiene el total de productos con filtros opcionales
         
+        Args:
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
+            
         Returns:
             int: Total de productos
             
@@ -162,7 +198,10 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            return self.product_repository.count_all()
+            return self.product_repository.count(
+                sku=sku, name=name, expiration_date=expiration_date,
+                quantity=quantity, price=price, location=location
+            )
         except Exception as e:
             raise BusinessLogicError(f"Error al contar productos: {str(e)}")
     
@@ -206,20 +245,6 @@ class ProductService:
         except Exception as e:
             raise BusinessLogicError(f"Error al eliminar todos los productos: {str(e)}")
     
-    def get_products_count(self) -> int:
-        """
-        Obtiene el número total de productos
-        
-        Returns:
-            int: Número total de productos
-            
-        Raises:
-            BusinessLogicError: Si hay error en la operación
-        """
-        try:
-            return self.product_repository.count()
-        except Exception as e:
-            raise BusinessLogicError(f"Error al contar productos: {str(e)}")
     
     def _validate_required_fields(self, product_data: Dict[str, Any]) -> None:
         """
