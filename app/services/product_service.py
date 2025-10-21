@@ -107,18 +107,22 @@ class ProductService:
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener producto por SKU: {str(e)}")
     
-    def get_all_products(self) -> List[Product]:
+    def get_all_products(self, limit: Optional[int] = None, offset: int = 0) -> List[Product]:
         """
-        Obtiene todos los productos
+        Obtiene todos los productos con paginación
         
+        Args:
+            limit: Límite de productos a obtener (opcional)
+            offset: Desplazamiento para paginación
+            
         Returns:
-            List[Product]: Lista de todos los productos
+            List[Product]: Lista de productos
             
         Raises:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            products = self.product_repository.get_all()
+            products = self.product_repository.get_all(limit=limit, offset=offset)
             # Generar URLs para todos los productos que tengan foto
             for product in products:
                 if product.photo_filename:
@@ -127,10 +131,14 @@ class ProductService:
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener productos: {str(e)}")
     
-    def get_products_summary(self) -> List[Dict[str, Any]]:
+    def get_products_summary(self, limit: Optional[int] = None, offset: int = 0) -> List[Dict[str, Any]]:
         """
-        Obtiene un resumen de todos los productos para listado
+        Obtiene un resumen de productos para listado con paginación
         
+        Args:
+            limit: Límite de productos a obtener (opcional)
+            offset: Desplazamiento para paginación
+            
         Returns:
             List[Dict[str, Any]]: Lista de diccionarios con datos básicos de productos
             
@@ -138,10 +146,25 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            products = self.get_all_products()
+            products = self.get_all_products(limit=limit, offset=offset)
             return [product.to_dict() for product in products]
         except Exception as e:
             raise BusinessLogicError(f"Error al obtener resumen de productos: {str(e)}")
+    
+    def get_products_count(self) -> int:
+        """
+        Obtiene el total de productos
+        
+        Returns:
+            int: Total de productos
+            
+        Raises:
+            BusinessLogicError: Si hay error en la operación
+        """
+        try:
+            return self.product_repository.count_all()
+        except Exception as e:
+            raise BusinessLogicError(f"Error al contar productos: {str(e)}")
     
     def delete_product(self, product_id: int) -> bool:
         """

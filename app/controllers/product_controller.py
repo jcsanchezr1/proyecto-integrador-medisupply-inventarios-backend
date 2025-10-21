@@ -66,9 +66,44 @@ class ProductController(BaseController, Resource):
                 
                 return self.success_response(data=product.to_dict())
             else:
-                # Obtener todos los productos
-                products_summary = self.product_service.get_products_summary()
-                return self.success_response(data=products_summary)
+                # Obtener lista de productos con paginación
+                page = request.args.get('page', 1, type=int)
+                per_page = request.args.get('per_page', 10, type=int)
+
+                if page < 1:
+                    return self.error_response("El parámetro 'page' debe ser mayor a 0", 400)
+                
+                if per_page < 1 or per_page > 100:
+                    return self.error_response("El parámetro 'per_page' debe estar entre 1 y 100", 400)
+                
+                offset = (page - 1) * per_page
+
+                products = self.product_service.get_products_summary(
+                    limit=per_page,
+                    offset=offset
+                )
+                total = self.product_service.get_products_count()
+
+                total_pages = (total + per_page - 1) // per_page
+                has_next = page < total_pages
+                has_prev = page > 1
+                
+                return self.success_response(
+                    data={
+                        'products': products,
+                        'pagination': {
+                            'page': page,
+                            'per_page': per_page,
+                            'total': total,
+                            'total_pages': total_pages,
+                            'has_next': has_next,
+                            'has_prev': has_prev,
+                            'next_page': page + 1 if has_next else None,
+                            'prev_page': page - 1 if has_prev else None
+                        }
+                    },
+                    message="Lista de productos obtenida exitosamente"
+                )
                 
         except BusinessLogicError as e:
             return self.handle_exception(e)

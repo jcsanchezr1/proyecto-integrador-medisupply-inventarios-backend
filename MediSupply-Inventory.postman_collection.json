@@ -734,29 +734,79 @@
 							"    pm.expect(response.success).to.be.true;",
 							"});",
 							"",
-							"// Validar que data es un array",
-							"pm.test('Data is an array', function () {",
+							"// Validar estructura de paginación",
+							"pm.test('Response has pagination structure', function () {",
 							"    const response = pm.response.json();",
-							"    pm.expect(response.data).to.be.an('array');",
+							"    pm.expect(response.data).to.have.property('products');",
+							"    pm.expect(response.data).to.have.property('pagination');",
+							"    pm.expect(response.data.products).to.be.an('array');",
+							"});",
+							"",
+							"// Validar información de paginación",
+							"pm.test('Pagination has required fields', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination).to.have.property('page');",
+							"    pm.expect(pagination).to.have.property('per_page');",
+							"    pm.expect(pagination).to.have.property('total');",
+							"    pm.expect(pagination).to.have.property('total_pages');",
+							"    pm.expect(pagination).to.have.property('has_next');",
+							"    pm.expect(pagination).to.have.property('has_prev');",
+							"    pm.expect(pagination).to.have.property('next_page');",
+							"    pm.expect(pagination).to.have.property('prev_page');",
+							"});",
+							"",
+							"// Validar tipos de datos de paginación",
+							"pm.test('Pagination data types are correct', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination.page).to.be.a('number');",
+							"    pm.expect(pagination.per_page).to.be.a('number');",
+							"    pm.expect(pagination.total).to.be.a('number');",
+							"    pm.expect(pagination.total_pages).to.be.a('number');",
+							"    pm.expect(pagination.has_next).to.be.a('boolean');",
+							"    pm.expect(pagination.has_prev).to.be.a('boolean');",
 							"});",
 							"",
 							"// Validar que hay al menos un producto",
 							"pm.test('At least one product exists', function () {",
 							"    const response = pm.response.json();",
-							"    pm.expect(response.data.length).to.be.at.least(1);",
+							"    pm.expect(response.data.products.length).to.be.at.least(1);",
 							"});",
 							"",
 							"// Validar estructura de productos",
 							"pm.test('Products have required fields', function () {",
 							"    const response = pm.response.json();",
-							"    if (response.data.length > 0) {",
-							"        const product = response.data[0];",
+							"    if (response.data.products.length > 0) {",
+							"        const product = response.data.products[0];",
 							"        pm.expect(product).to.have.property('sku');",
 							"        pm.expect(product).to.have.property('name');",
 							"        pm.expect(product).to.have.property('expiration_date');",
 							"        pm.expect(product).to.have.property('quantity');",
 							"        pm.expect(product).to.have.property('price');",
 							"        pm.expect(product).to.have.property('location');",
+							"    }",
+							"});",
+							"",
+							"// Guardar datos de paginación para tests posteriores",
+							"pm.test('Save pagination data for later tests', function () {",
+							"    const response = pm.response.json();",
+							"    if (response.data && response.data.pagination) {",
+							"        const pagination = response.data.pagination;",
+							"        pm.environment.set('total_products', pagination.total);",
+							"        pm.environment.set('total_pages', pagination.total_pages);",
+							"        pm.environment.set('current_page', pagination.page);",
+							"        pm.environment.set('per_page', pagination.per_page);",
+							"        pm.environment.set('has_next', pagination.has_next);",
+							"        pm.environment.set('has_prev', pagination.has_prev);",
+							"        ",
+							"        // Guardar IDs de productos para tests posteriores",
+							"        if (response.data.products && response.data.products.length > 0) {",
+							"            const productIds = response.data.products.map(p => p.id);",
+							"            pm.environment.set('product_ids', JSON.stringify(productIds));",
+							"            pm.environment.set('first_product_id', productIds[0]);",
+							"            pm.environment.set('last_product_id', productIds[productIds.length - 1]);",
+							"        }",
 							"    }",
 							"});",
 							"",
@@ -785,6 +835,211 @@
 					"path": [
 						"inventory",
 						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Paginación - Página 1 con 5 elementos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de paginación",
+							"pm.test('Pagination structure is correct', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data).to.have.property('products');",
+							"    pm.expect(response.data).to.have.property('pagination');",
+							"});",
+							"",
+							"// Validar parámetros de paginación específicos",
+							"pm.test('Pagination parameters are correct', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination.page).to.equal(1);",
+							"    pm.expect(pagination.per_page).to.equal(5);",
+							"});",
+							"",
+							"// Validar que no hay más de 5 productos",
+							"pm.test('Maximum 5 products per page', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.products.length).to.be.at.most(5);",
+							"});",
+							"",
+							"// Validar que no hay página anterior",
+							"pm.test('No previous page on first page', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination.has_prev).to.be.false;",
+							"    pm.expect(pagination.prev_page).to.be.null;",
+							"});",
+							"",
+							"console.log('Paginación página 1 con 5 elementos verificada');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products?page=1&per_page=5",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Paginación - Validación de Parámetros Inválidos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about page parameter', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('page');",
+							"});",
+							"",
+							"console.log('Validación de parámetros inválidos verificada');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products?page=0",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Paginación - Validación de per_page Inválido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about per_page parameter', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('per_page');",
+							"});",
+							"",
+							"console.log('Validación de per_page inválido verificada');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products?per_page=150",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products"
+					],
+					"query": [
+						{
+							"key": "per_page",
+							"value": "150"
+						}
 					]
 				}
 			},

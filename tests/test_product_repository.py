@@ -214,7 +214,7 @@ class TestProductRepository:
         # Mock de error de base de datos
         mock_session.query.side_effect = SQLAlchemyError("Database connection error")
         
-        with pytest.raises(Exception, match="Error al obtener todos los productos: Database connection error"):
+        with pytest.raises(Exception, match="Error al obtener productos: Database connection error"):
             product_repository.get_all()
         
         mock_session.close.assert_called_once()
