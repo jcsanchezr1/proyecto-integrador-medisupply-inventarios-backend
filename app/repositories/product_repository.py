@@ -173,22 +173,32 @@ class ProductRepository(BaseRepository):
         finally:
             session.close()
     
-    def get_all(self) -> List[Product]:
+    def get_all(self, limit: Optional[int] = None, offset: int = 0) -> List[Product]:
         """
-        Obtiene todos los productos
+        Obtiene todos los productos con paginación
         
+        Args:
+            limit: Límite de productos a obtener (opcional)
+            offset: Desplazamiento para paginación
+            
         Returns:
-            List[Product]: Lista de todos los productos
+            List[Product]: Lista de productos
             
         Raises:
             Exception: Si hay error en la base de datos
         """
         session = self._get_session()
         try:
-            db_products = session.query(ProductDB).all()
+            query = session.query(ProductDB)
+            if limit:
+                query = query.limit(limit)
+            if offset:
+                query = query.offset(offset)
+            
+            db_products = query.all()
             return [self._db_to_model(db_product) for db_product in db_products]
         except SQLAlchemyError as e:
-            raise Exception(f"Error al obtener todos los productos: {str(e)}")
+            raise Exception(f"Error al obtener productos: {str(e)}")
         finally:
             session.close()
     

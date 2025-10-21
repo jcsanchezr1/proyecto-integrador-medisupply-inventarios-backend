@@ -41,6 +41,7 @@ class TestAppCreation:
             with patch('app.controllers.product_controller.ProductService') as mock_service_class:
                 mock_service = MagicMock()
                 mock_service.get_products_summary.return_value = []
+                mock_service.get_products_count.return_value = 0
                 mock_service.get_product_by_id.return_value = None
                 mock_service.delete_all_products.return_value = 0
                 mock_service_class.return_value = mock_service
