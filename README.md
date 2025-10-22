@@ -89,6 +89,7 @@ Estructura básica preparada para escalar:
 - `GET /inventory/products/filter` - Filtrar productos con criterios específicos
 - `GET /inventory/products/{id}` - Obtener producto por ID
 - `POST /inventory/products` - Crear nuevo producto
+- `PUT /inventory/products/{id}/stock` - Actualizar stock de un producto
 - `DELETE /inventory/products/{id}` - Eliminar producto por ID
 - `DELETE /inventory/products/delete-all` - Eliminar todos los productos
 
@@ -451,6 +452,77 @@ tests/
 ```
 
 
+
+## Actualización de Stock
+
+### Endpoint: `PUT /inventory/products/{product_id}/stock`
+
+Permite actualizar el stock de un producto específico mediante operaciones de suma o resta.
+
+#### Request Body
+```json
+{
+    "operation": "add|subtract",
+    "quantity": 10,
+    "reason": "restock|order_fulfillment|adjustment"
+}
+```
+
+#### Parámetros
+- **operation** (string, requerido): Operación a realizar
+  - `"add"`: Sumar cantidad al stock
+  - `"subtract"`: Restar cantidad del stock
+- **quantity** (integer, requerido): Cantidad a sumar o restar (debe ser > 0)
+- **reason** (string, opcional): Motivo del cambio de stock
+
+#### Respuesta Exitosa (200)
+```json
+{
+    "success": true,
+    "message": "Stock actualizado exitosamente",
+    "data": {
+        "product_id": 1,
+        "previous_quantity": 50,
+        "new_quantity": 60,
+        "operation": "add",
+        "quantity_changed": 10
+    }
+}
+```
+
+#### Errores
+
+**400 - Error de Validación:**
+```json
+{
+    "success": false,
+    "error": "Error de validación",
+    "details": "La operación debe ser 'add' o 'subtract'"
+}
+```
+
+**422 - Error de Lógica de Negocio:**
+```json
+{
+    "success": false,
+    "error": "Error de lógica de negocio",
+    "details": "Stock insuficiente. Disponible: 5, Solicitado: 10"
+}
+```
+
+#### Casos de Uso
+
+1. **Restock de productos**: `{"operation": "add", "quantity": 100}`
+2. **Fulfillment de pedidos**: `{"operation": "subtract", "quantity": 5}`
+3. **Ajustes de inventario**: `{"operation": "add", "quantity": 2, "reason": "adjustment"}`
+
+#### Validaciones
+
+- El producto debe existir
+- La operación debe ser válida (`add` o `subtract`)
+- La cantidad debe ser mayor a 0
+- Para operaciones `subtract`, debe haber stock suficiente
+- El `product_id` debe ser un entero válido
 
 ## Desarrollo
 
