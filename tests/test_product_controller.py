@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from flask import Flask
 from app.controllers.product_controller import ProductController, ProductDeleteAllController
 from app.services.product_service import ProductService
 from app.models.product import Product
@@ -160,13 +161,22 @@ class TestProductController:
             {'id': 2, 'sku': 'MED-5678'}
         ]
         mock_service.get_products_summary.return_value = mock_products_summary
-        
-        response, status_code = product_controller.get()
+        mock_service.get_products_count.return_value = 2
+
+        app = Flask(__name__)
+        with app.test_request_context('/inventory/products'):
+            response, status_code = product_controller.get()
         
         assert status_code == 200
         assert response['success'] is True
-        assert response['data'] == mock_products_summary
+        assert 'products' in response['data']
+        assert 'pagination' in response['data']
+        assert response['data']['products'] == mock_products_summary
+        assert response['data']['pagination']['total'] == 2
+        assert response['data']['pagination']['page'] == 1
+        assert response['data']['pagination']['per_page'] == 10
         mock_service.get_products_summary.assert_called_once()
+        mock_service.get_products_count.assert_called_once()
     
     def test_get_service_error(self, product_controller, mock_service):
         """Test: GET con error del servicio"""
