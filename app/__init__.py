@@ -29,6 +29,7 @@ def configure_routes(app):
     from .controllers.health_controller import HealthCheckView
     from .controllers.product_controller import ProductController, ProductDeleteAllController
     from .controllers.product_filter_controller import ProductFilterController
+    from .controllers.product_stock_controller import ProductStockController
     from .controllers.provider_products_controller import ProviderProductsController
     from .controllers.product_import_controller import ProductImportController
     
@@ -40,6 +41,7 @@ def configure_routes(app):
     # Product endpoints
     api.add_resource(ProductController, '/inventory/products', '/inventory/products/<int:product_id>')
     api.add_resource(ProductFilterController, '/inventory/products/filter')
+    api.add_resource(ProductStockController, '/inventory/products/<int:product_id>/stock')
     api.add_resource(ProductDeleteAllController, '/inventory/products/delete-all')
     api.add_resource(ProductImportController, '/inventory/products/import')
     

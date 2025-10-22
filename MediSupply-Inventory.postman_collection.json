@@ -3043,6 +3043,644 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Agregar Cantidad",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener o crear un producto para las pruebas",
+							"let productId = pm.environment.get('test_product_id');",
+							"",
+							"if (!productId) {",
+							"    // Si no existe un producto de prueba, crear uno",
+							"    const randomSku = 'MED-' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');",
+							"    const productData = {",
+							"        sku: randomSku,",
+							"        name: 'Producto Test Stock Dinámico',",
+							"        expiration_date: '2025-12-31',",
+							"        quantity: 20,",
+							"        price: 30.00,",
+							"        location: 'A-01-01',",
+							"        description: 'Producto creado dinámicamente para pruebas de stock',",
+							"        product_type: 'Alto valor',",
+							"        provider_id: '123e4567-e89b-12d3-a456-426614174000'",
+							"    };",
+							"    ",
+							"    // Crear el producto",
+							"    pm.sendRequest({",
+							"        url: pm.environment.get('url_local_inventario') + '/inventory/products',",
+							"        method: 'POST',",
+							"        header: {",
+							"            'Content-Type': 'application/json'",
+							"        },",
+							"        body: {",
+							"            mode: 'raw',",
+							"            raw: JSON.stringify(productData)",
+							"        }",
+							"    }, function (err, response) {",
+							"        if (response.code === 201) {",
+							"            const responseData = response.json();",
+							"            productId = responseData.data.id;",
+							"            pm.environment.set('test_product_id', productId);",
+							"            console.log(`Producto creado dinámicamente con ID: ${productId}`);",
+							"        } else {",
+							"            console.error('Error creando producto:', response.json());",
+							"        }",
+							"    });",
+							"}",
+							"",
+							"const quantity = Math.floor(Math.random() * 20) + 1; // 1-20",
+							"",
+							"// Guardar datos para el test",
+							"pm.environment.set('test_quantity', quantity);",
+							"pm.environment.set('test_product_id', productId);",
+							"",
+							"console.log(`Actualizando stock del producto ${productId} agregando ${quantity} unidades`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('message');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar datos de actualización",
+							"pm.test('Stock update data', function () {",
+							"    const response = pm.response.json();",
+							"    const data = response.data;",
+							"    ",
+							"    pm.expect(data).to.have.property('product_id');",
+							"    pm.expect(data).to.have.property('previous_quantity');",
+							"    pm.expect(data).to.have.property('new_quantity');",
+							"    pm.expect(data).to.have.property('operation');",
+							"    pm.expect(data).to.have.property('quantity_changed');",
+							"    ",
+							"    pm.expect(data.operation).to.eql('add');",
+							"    pm.expect(data.quantity_changed).to.eql(parseInt(pm.environment.get('test_quantity')));",
+							"    pm.expect(data.new_quantity).to.eql(data.previous_quantity + data.quantity_changed);",
+							"});",
+							"",
+							"console.log('Stock actualizado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"add\",\n    \"quantity\": {{test_quantity}},\n    \"reason\": \"restock\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{test_product_id}}",
+						"stock"
+					]
+				},
+				"description": "Agregar cantidad al stock de un producto"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Restar Cantidad",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener el producto de prueba creado dinámicamente",
+							"let productId = pm.environment.get('test_product_id');",
+							"",
+							"if (!productId) {",
+							"    console.error('No se encontró un producto de prueba. Ejecutar primero el test de agregar cantidad.');",
+							"    return;",
+							"}",
+							"",
+							"const quantity = Math.floor(Math.random() * 5) + 1; // 1-5 (cantidad pequeña para evitar errores)",
+							"",
+							"// Guardar datos para el test",
+							"pm.environment.set('test_quantity_subtract', quantity);",
+							"pm.environment.set('test_product_id_subtract', productId);",
+							"",
+							"console.log(`Actualizando stock del producto ${productId} restando ${quantity} unidades`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('message');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar datos de actualización",
+							"pm.test('Stock update data', function () {",
+							"    const response = pm.response.json();",
+							"    const data = response.data;",
+							"    ",
+							"    pm.expect(data).to.have.property('product_id');",
+							"    pm.expect(data).to.have.property('previous_quantity');",
+							"    pm.expect(data).to.have.property('new_quantity');",
+							"    pm.expect(data).to.have.property('operation');",
+							"    pm.expect(data).to.have.property('quantity_changed');",
+							"    ",
+							"    pm.expect(data.operation).to.eql('subtract');",
+							"    pm.expect(data.quantity_changed).to.eql(parseInt(pm.environment.get('test_quantity_subtract')));",
+							"    pm.expect(data.new_quantity).to.eql(data.previous_quantity - data.quantity_changed);",
+							"});",
+							"",
+							"console.log('Stock actualizado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"subtract\",\n    \"quantity\": {{test_quantity_subtract}},\n    \"reason\": \"order_fulfillment\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id_subtract}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{test_product_id_subtract}}",
+						"stock"
+					]
+				},
+				"description": "Restar cantidad del stock de un producto"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Producto No Encontrado",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about product not found', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('Producto con ID 99999 no encontrado');",
+							"});",
+							"",
+							"console.log('Error de producto no encontrado verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"add\",\n    \"quantity\": 10,\n    \"reason\": \"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/99999/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"99999",
+						"stock"
+					]
+				},
+				"description": "Error cuando el producto no existe"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Stock Insuficiente",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener el producto de prueba creado dinámicamente",
+							"let productId = pm.environment.get('test_product_id');",
+							"",
+							"if (!productId) {",
+							"    console.error('No se encontró un producto de prueba. Ejecutar primero el test de agregar cantidad.');",
+							"    return;",
+							"}",
+							"",
+							"pm.environment.set('test_product_id_insufficient', productId);",
+							"",
+							"console.log(`Probando stock insuficiente para producto ${productId}`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about insufficient stock', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('Stock insuficiente');",
+							"});",
+							"",
+							"console.log('Error de stock insuficiente verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"subtract\",\n    \"quantity\": 99999,\n    \"reason\": \"test_insufficient_stock\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id_insufficient}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{test_product_id_insufficient}}",
+						"stock"
+					]
+				},
+				"description": "Error cuando no hay stock suficiente para restar"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Operación Inválida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid operation', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('La operación debe ser \\'add\\' o \\'subtract\\'');",
+							"});",
+							"",
+							"console.log('Error de operación inválida verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"multiply\",\n    \"quantity\": 10,\n    \"reason\": \"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"1",
+						"stock"
+					]
+				},
+				"description": "Error cuando la operación no es válida"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Cantidad Inválida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid quantity', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('La cantidad debe ser un número mayor a 0');",
+							"});",
+							"",
+							"console.log('Error de cantidad inválida verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"add\",\n    \"quantity\": -5,\n    \"reason\": \"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"1",
+						"stock"
+					]
+				},
+				"description": "Error cuando la cantidad es inválida (negativa)"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Sin JSON",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about missing JSON', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('Se requiere un cuerpo JSON');",
+							"});",
+							"",
+							"console.log('Error de JSON faltante verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"1",
+						"stock"
+					]
+				},
+				"description": "Error cuando no se proporciona JSON"
+			},
+			"response": []
+		},
+		{
+			"name": "Limpiar Producto de Prueba",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener el ID del producto de prueba",
+							"const productId = pm.environment.get('test_product_id');",
+							"",
+							"if (productId) {",
+							"    console.log(`Eliminando producto de prueba con ID: ${productId}`);",
+							"    pm.environment.set('cleanup_product_id', productId);",
+							"} else {",
+							"    console.log('No hay producto de prueba para limpiar');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la limpieza fue exitosa",
+							"pm.test('Cleanup successful', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Limpiar variables de entorno",
+							"pm.environment.unset('test_product_id');",
+							"pm.environment.unset('test_quantity');",
+							"pm.environment.unset('test_quantity_subtract');",
+							"pm.environment.unset('test_product_id_subtract');",
+							"pm.environment.unset('test_product_id_insufficient');",
+							"pm.environment.unset('test_product_id_invalid_op');",
+							"pm.environment.unset('cleanup_product_id');",
+							"",
+							"console.log('Variables de entorno limpiadas');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{cleanup_product_id}}",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{cleanup_product_id}}"
+					]
+				},
+				"description": "Eliminar el producto de prueba creado dinámicamente"
+			},
+			"response": []
 		}
 	],
 	"variable": [
