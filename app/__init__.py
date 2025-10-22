@@ -31,6 +31,7 @@ def configure_routes(app):
     from .controllers.product_filter_controller import ProductFilterController
     from .controllers.product_stock_controller import ProductStockController
     from .controllers.provider_products_controller import ProviderProductsController
+    from .controllers.product_import_controller import ProductImportController
     
     api = Api(app)
     
@@ -42,6 +43,7 @@ def configure_routes(app):
     api.add_resource(ProductFilterController, '/inventory/products/filter')
     api.add_resource(ProductStockController, '/inventory/products/<int:product_id>/stock')
     api.add_resource(ProductDeleteAllController, '/inventory/products/delete-all')
+    api.add_resource(ProductImportController, '/inventory/products/import')
     
     # Provider products endpoint
     api.add_resource(ProviderProductsController, '/inventory/providers/products')

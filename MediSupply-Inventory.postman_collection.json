@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "c518d6bc-dafc-4e58-b33c-be816af431c1",
+		"_postman_id": "6251d929-18ab-4621-a024-64ba6dbd2677",
 		"name": "MediSupply Inventory API - Con Datos Aleatorios",
 		"description": "Colección para validar el servicio de inventarios MediSupply con datos aleatorios generados automáticamente",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-c518d6bc-dafc-4e58-b33c-be816af431c1?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-6251d929-18ab-4621-a024-64ba6dbd2677?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -2971,6 +2971,80 @@
 			"response": []
 		},
 		{
+			"name": "Crear Productos Masivos - Archivo Vacío",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "userId",
+							"value": "8f1b7d3f-4e3b-4f5e-9b2a-7d2a6b9f1c05",
+							"type": "text"
+						},
+						{
+							"key": "file",
+							"description": "Archivo CSV con productos a procesar",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/import",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"import"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Actualizar Stock - Agregar Cantidad",
 			"event": [
 				{
@@ -3612,7 +3686,7 @@
 	"variable": [
 		{
 			"key": "url_local_inventario",
-			"value": "http://localhost:8084",
+			"value": "http://localhost:8082",
 			"type": "string"
 		}
 	]
