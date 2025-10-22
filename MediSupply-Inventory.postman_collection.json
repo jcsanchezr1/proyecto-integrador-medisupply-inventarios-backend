@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "6251d929-18ab-4621-a024-64ba6dbd2677",
+		"_postman_id": "8286f945-177e-4fed-838d-ee156711321b",
 		"name": "MediSupply Inventory API - Con Datos Aleatorios",
 		"description": "Colección para validar el servicio de inventarios MediSupply con datos aleatorios generados automáticamente",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-6251d929-18ab-4621-a024-64ba6dbd2677?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-8286f945-177e-4fed-838d-ee156711321b?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -3045,6 +3045,124 @@
 			"response": []
 		},
 		{
+			"name": "Obtener Historial de cargues masivos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response has success structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/history",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"history"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener Historial de cargues masivos - Página 1 con 5 elementos Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response has success structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/history?page=1&per_page=5",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"history"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Actualizar Stock - Agregar Cantidad",
 			"event": [
 				{
@@ -3479,7 +3597,7 @@
 					}
 				},
 				"url": {
-					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"raw": "{{url_local_inventario}}/inventory/products/1/stock",
 					"host": [
 						"{{url_local_inventario}}"
 					],
@@ -3545,7 +3663,7 @@
 					}
 				},
 				"url": {
-					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"raw": "{{url_local_inventario}}/inventory/products/1/stock",
 					"host": [
 						"{{url_local_inventario}}"
 					],
@@ -3605,7 +3723,7 @@
 					}
 				},
 				"url": {
-					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"raw": "{{url_local_inventario}}/inventory/products/1/stock",
 					"host": [
 						"{{url_local_inventario}}"
 					],

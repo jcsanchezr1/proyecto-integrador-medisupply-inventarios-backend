@@ -32,6 +32,7 @@ class Config:
     ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
     PROVIDERS_SERVICE_URL = os.getenv('PROVIDERS_SERVICE_URL', 'http://localhost:8083')
+    AUTHENTICATOR_SERVICE_URL = os.getenv('AUTHENTICATOR_SERVICE_URL', 'http://localhost:8082')
     
     # Configuración de Pub/Sub
     PUBSUB_TOPIC_PRODUCTS_IMPORT = os.getenv('PUBSUB_TOPIC_PRODUCTS_IMPORT', 'inventory.processing.products')
