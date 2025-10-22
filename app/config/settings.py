@@ -24,6 +24,7 @@ class Config:
     GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID', 'soluciones-cloud-2024-02')
     BUCKET_NAME = os.getenv('BUCKET_NAME', 'medisupply-images-bucket')
     BUCKET_FOLDER = os.getenv('BUCKET_FOLDER', 'products')
+    BUCKET_FOLDER_PROCESSED_PRODUCTS = os.getenv('BUCKET_FOLDER_PROCESSED_PRODUCTS', 'processed-products')
     BUCKET_LOCATION = os.getenv('BUCKET_LOCATION', 'us-central1')
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '')
     SIGNING_SERVICE_ACCOUNT_EMAIL = os.getenv('SIGNING_SERVICE_ACCOUNT_EMAIL', '')
@@ -31,6 +32,13 @@ class Config:
     ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
     PROVIDERS_SERVICE_URL = os.getenv('PROVIDERS_SERVICE_URL', 'http://localhost:8083')
+    AUTHENTICATOR_SERVICE_URL = os.getenv('AUTHENTICATOR_SERVICE_URL', 'http://localhost:8082')
+    
+    # Configuración de Pub/Sub
+    PUBSUB_TOPIC_PRODUCTS_IMPORT = os.getenv('PUBSUB_TOPIC_PRODUCTS_IMPORT', 'inventory.processing.products')
+    
+    # Configuración de importación de productos
+    MAX_IMPORT_PRODUCTS = 100
 
 
 class DevelopmentConfig(Config):

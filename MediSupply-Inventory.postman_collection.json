@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "c518d6bc-dafc-4e58-b33c-be816af431c1",
+		"_postman_id": "8286f945-177e-4fed-838d-ee156711321b",
 		"name": "MediSupply Inventory API - Con Datos Aleatorios",
 		"description": "Colección para validar el servicio de inventarios MediSupply con datos aleatorios generados automáticamente",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-c518d6bc-dafc-4e58-b33c-be816af431c1?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-8286f945-177e-4fed-838d-ee156711321b?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -556,7 +556,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"sku\": \"MED-2222\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+					"raw": "{\n    \"sku\": \"MED-7777\",\n    \"name\": \"Producto Fecha Pasada\",\n    \"expiration_date\": \"2020-01-01T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"A-01-01\",\n    \"description\": \"Producto con fecha de vencimiento pasada\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
 				},
 				"url": {
 					"raw": "{{url_local_inventario}}/inventory/products",
@@ -694,7 +694,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"sku\": \"MED-3333\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+					"raw": "{\n    \"sku\": \"MED-8888\",\n    \"name\": \"Producto Ubicacion Invalida\",\n    \"expiration_date\": \"2025-12-31T00:00:00.000Z\",\n    \"quantity\": 50,\n    \"price\": 15000,\n    \"location\": \"INVALID-LOCATION\",\n    \"description\": \"Producto con ubicacion invalida\",\n    \"product_type\": \"Seguridad\",\n    \"provider_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
 				},
 				"url": {
 					"raw": "{{url_local_inventario}}/inventory/products",
@@ -734,29 +734,79 @@
 							"    pm.expect(response.success).to.be.true;",
 							"});",
 							"",
-							"// Validar que data es un array",
-							"pm.test('Data is an array', function () {",
+							"// Validar estructura de paginación",
+							"pm.test('Response has pagination structure', function () {",
 							"    const response = pm.response.json();",
-							"    pm.expect(response.data).to.be.an('array');",
+							"    pm.expect(response.data).to.have.property('products');",
+							"    pm.expect(response.data).to.have.property('pagination');",
+							"    pm.expect(response.data.products).to.be.an('array');",
+							"});",
+							"",
+							"// Validar información de paginación",
+							"pm.test('Pagination has required fields', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination).to.have.property('page');",
+							"    pm.expect(pagination).to.have.property('per_page');",
+							"    pm.expect(pagination).to.have.property('total');",
+							"    pm.expect(pagination).to.have.property('total_pages');",
+							"    pm.expect(pagination).to.have.property('has_next');",
+							"    pm.expect(pagination).to.have.property('has_prev');",
+							"    pm.expect(pagination).to.have.property('next_page');",
+							"    pm.expect(pagination).to.have.property('prev_page');",
+							"});",
+							"",
+							"// Validar tipos de datos de paginación",
+							"pm.test('Pagination data types are correct', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination.page).to.be.a('number');",
+							"    pm.expect(pagination.per_page).to.be.a('number');",
+							"    pm.expect(pagination.total).to.be.a('number');",
+							"    pm.expect(pagination.total_pages).to.be.a('number');",
+							"    pm.expect(pagination.has_next).to.be.a('boolean');",
+							"    pm.expect(pagination.has_prev).to.be.a('boolean');",
 							"});",
 							"",
 							"// Validar que hay al menos un producto",
 							"pm.test('At least one product exists', function () {",
 							"    const response = pm.response.json();",
-							"    pm.expect(response.data.length).to.be.at.least(1);",
+							"    pm.expect(response.data.products.length).to.be.at.least(1);",
 							"});",
 							"",
 							"// Validar estructura de productos",
 							"pm.test('Products have required fields', function () {",
 							"    const response = pm.response.json();",
-							"    if (response.data.length > 0) {",
-							"        const product = response.data[0];",
+							"    if (response.data.products.length > 0) {",
+							"        const product = response.data.products[0];",
 							"        pm.expect(product).to.have.property('sku');",
 							"        pm.expect(product).to.have.property('name');",
 							"        pm.expect(product).to.have.property('expiration_date');",
 							"        pm.expect(product).to.have.property('quantity');",
 							"        pm.expect(product).to.have.property('price');",
 							"        pm.expect(product).to.have.property('location');",
+							"    }",
+							"});",
+							"",
+							"// Guardar datos de paginación para tests posteriores",
+							"pm.test('Save pagination data for later tests', function () {",
+							"    const response = pm.response.json();",
+							"    if (response.data && response.data.pagination) {",
+							"        const pagination = response.data.pagination;",
+							"        pm.environment.set('total_products', pagination.total);",
+							"        pm.environment.set('total_pages', pagination.total_pages);",
+							"        pm.environment.set('current_page', pagination.page);",
+							"        pm.environment.set('per_page', pagination.per_page);",
+							"        pm.environment.set('has_next', pagination.has_next);",
+							"        pm.environment.set('has_prev', pagination.has_prev);",
+							"        ",
+							"        // Guardar IDs de productos para tests posteriores",
+							"        if (response.data.products && response.data.products.length > 0) {",
+							"            const productIds = response.data.products.map(p => p.id);",
+							"            pm.environment.set('product_ids', JSON.stringify(productIds));",
+							"            pm.environment.set('first_product_id', productIds[0]);",
+							"            pm.environment.set('last_product_id', productIds[productIds.length - 1]);",
+							"        }",
 							"    }",
 							"});",
 							"",
@@ -785,6 +835,211 @@
 					"path": [
 						"inventory",
 						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Paginación - Página 1 con 5 elementos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de paginación",
+							"pm.test('Pagination structure is correct', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data).to.have.property('products');",
+							"    pm.expect(response.data).to.have.property('pagination');",
+							"});",
+							"",
+							"// Validar parámetros de paginación específicos",
+							"pm.test('Pagination parameters are correct', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination.page).to.equal(1);",
+							"    pm.expect(pagination.per_page).to.equal(5);",
+							"});",
+							"",
+							"// Validar que no hay más de 5 productos",
+							"pm.test('Maximum 5 products per page', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.products.length).to.be.at.most(5);",
+							"});",
+							"",
+							"// Validar que no hay página anterior",
+							"pm.test('No previous page on first page', function () {",
+							"    const response = pm.response.json();",
+							"    const pagination = response.data.pagination;",
+							"    pm.expect(pagination.has_prev).to.be.false;",
+							"    pm.expect(pagination.prev_page).to.be.null;",
+							"});",
+							"",
+							"console.log('Paginación página 1 con 5 elementos verificada');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products?page=1&per_page=5",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Paginación - Validación de Parámetros Inválidos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about page parameter', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('page');",
+							"});",
+							"",
+							"console.log('Validación de parámetros inválidos verificada');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products?page=0",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Paginación - Validación de per_page Inválido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about per_page parameter', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('per_page');",
+							"});",
+							"",
+							"console.log('Validación de per_page inválido verificada');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products?per_page=150",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products"
+					],
+					"query": [
+						{
+							"key": "per_page",
+							"value": "150"
+						}
 					]
 				}
 			},
@@ -1981,6 +2236,1567 @@
 						"1"
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Filtrar por SKU",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response).to.have.property('message');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar estructura de datos",
+							"pm.test('Data structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data).to.have.property('products');",
+							"    pm.expect(response.data).to.have.property('filters_applied');",
+							"    pm.expect(response.data).to.have.property('pagination');",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied).to.have.property('sku');",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"});",
+							"",
+							"// Guardar datos para tests posteriores",
+							"pm.test('Save filter data', function () {",
+							"    const response = pm.response.json();",
+							"    if (response.data.products && response.data.products.length > 0) {",
+							"        pm.environment.set('filtered_product_id', response.data.products[0].id);",
+							"        pm.environment.set('filtered_product_sku', response.data.products[0].sku);",
+							"        pm.environment.set('filtered_product_name', response.data.products[0].name);",
+							"        pm.environment.set('filtered_product_quantity', response.data.products[0].quantity);",
+							"        pm.environment.set('filtered_product_price', response.data.products[0].price);",
+							"        pm.environment.set('filtered_product_location', response.data.products[0].location);",
+							"        pm.environment.set('filtered_product_expiration_date', response.data.products[0].expiration_date);",
+							"    }",
+							"});",
+							"",
+							"console.log('Filtro por SKU verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar productos cuyo SKU contenga 'MED'"
+						}
+					]
+				},
+				"description": "Filtrar productos por SKU que contenga 'MED'"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Filtrar por Nombre",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied).to.have.property('name');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"});",
+							"",
+							"console.log('Filtro por nombre verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?name=Paracetamol",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar productos cuyo nombre contenga 'Paracetamol'"
+						}
+					]
+				},
+				"description": "Filtrar productos por nombre que contenga 'Paracetamol'"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Combinación de 2 Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Multiple filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"    pm.expect(response.data.filters_applied.quantity).to.be.null;",
+							"    pm.expect(response.data.filters_applied.price).to.be.null;",
+							"    pm.expect(response.data.filters_applied.location).to.be.null;",
+							"    pm.expect(response.data.filters_applied.expiration_date).to.be.null;",
+							"});",
+							"",
+							"console.log('Combinación de 2 filtros verificada exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&name=Paracetamol",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar por nombre que contenga 'Paracetamol'"
+						}
+					]
+				},
+				"description": "Combinar filtros por SKU y nombre"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Combinación de 3 Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar filtros aplicados",
+							"pm.test('Three filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"    pm.expect(response.data.filters_applied.quantity).to.eql(100);",
+							"    pm.expect(response.data.filters_applied.price).to.be.null;",
+							"    pm.expect(response.data.filters_applied.location).to.be.null;",
+							"    pm.expect(response.data.filters_applied.expiration_date).to.be.null;",
+							"});",
+							"",
+							"console.log('Combinación de 3 filtros verificada exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&name=Paracetamol&quantity=100",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar por nombre que contenga 'Paracetamol'"
+						},
+						{
+							"key": "quantity",
+							"value": "100",
+							"description": "Filtrar por cantidad exacta de 100"
+						}
+					]
+				},
+				"description": "Combinar filtros por SKU, nombre y cantidad"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Todos los Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar todos los filtros aplicados",
+							"pm.test('All filters applied', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.filters_applied.sku).to.eql('MED');",
+							"    pm.expect(response.data.filters_applied.name).to.eql('Paracetamol');",
+							"    pm.expect(response.data.filters_applied.quantity).to.eql(100);",
+							"    pm.expect(response.data.filters_applied.price).to.eql(15.5);",
+							"    pm.expect(response.data.filters_applied.location).to.eql('A-01');",
+							"    pm.expect(response.data.filters_applied.expiration_date).to.eql('2025-12-31');",
+							"});",
+							"",
+							"console.log('Todos los filtros verificados exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&name=Paracetamol&quantity=100&price=15.50&location=A-01&expiration_date=2025-12-31",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "name",
+							"value": "Paracetamol",
+							"description": "Filtrar por nombre que contenga 'Paracetamol'"
+						},
+						{
+							"key": "quantity",
+							"value": "100",
+							"description": "Filtrar por cantidad exacta de 100"
+						},
+						{
+							"key": "price",
+							"value": "15.50",
+							"description": "Filtrar por precio exacto de 15.50"
+						},
+						{
+							"key": "location",
+							"value": "A-01",
+							"description": "Filtrar por ubicación que contenga 'A-01'"
+						},
+						{
+							"key": "expiration_date",
+							"value": "2025-12-31",
+							"description": "Filtrar por fecha de vencimiento exacta"
+						}
+					]
+				},
+				"description": "Combinar todos los filtros disponibles"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Con Paginación",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar paginación",
+							"pm.test('Pagination structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.pagination).to.have.property('page');",
+							"    pm.expect(response.data.pagination).to.have.property('per_page');",
+							"    pm.expect(response.data.pagination).to.have.property('total');",
+							"    pm.expect(response.data.pagination).to.have.property('total_pages');",
+							"    pm.expect(response.data.pagination).to.have.property('has_next');",
+							"    pm.expect(response.data.pagination).to.have.property('has_prev');",
+							"});",
+							"",
+							"// Validar parámetros de paginación",
+							"pm.test('Pagination parameters', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.pagination.page).to.eql(1);",
+							"    pm.expect(response.data.pagination.per_page).to.eql(5);",
+							"});",
+							"",
+							"console.log('Filtros con paginación verificados exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&page=1&per_page=5",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Página 1"
+						},
+						{
+							"key": "per_page",
+							"value": "5",
+							"description": "5 elementos por página"
+						}
+					]
+				},
+				"description": "Filtrar productos con paginación"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error Sin Filtros",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about missing filters', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('Debe proporcionar al menos un filtro');",
+							"});",
+							"",
+							"console.log('Error sin filtros verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					]
+				},
+				"description": "Error al no proporcionar ningún filtro"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error Formato Fecha Inválido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about date format', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('formato de \\'expiration_date\\' debe ser YYYY-MM-DD');",
+							"});",
+							"",
+							"console.log('Error formato fecha inválido verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?expiration_date=31-12-2024",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "expiration_date",
+							"value": "31-12-2024",
+							"description": "Formato de fecha inválido (DD-MM-YYYY)"
+						}
+					]
+				},
+				"description": "Error con formato de fecha inválido"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error Página Inválida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid page', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('parámetro \\'page\\' debe ser mayor a 0');",
+							"});",
+							"",
+							"console.log('Error página inválida verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&page=0",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"description": "Página inválida (debe ser ≥ 1)"
+						}
+					]
+				},
+				"description": "Error con página inválida (0)"
+			},
+			"response": []
+		},
+		{
+			"name": "Filtros - Error per_page Inválido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid per_page', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.include('parámetro \\'per_page\\' debe estar entre 1 y 100');",
+							"});",
+							"",
+							"console.log('Error per_page inválido verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/filter?sku=MED&per_page=150",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "sku",
+							"value": "MED",
+							"description": "Filtrar por SKU que contenga 'MED'"
+						},
+						{
+							"key": "per_page",
+							"value": "150",
+							"description": "per_page inválido (debe ser 1-100)"
+						}
+					]
+				},
+				"description": "Error con per_page inválido (> 100)"
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Productos Masivos - Archivo Vacío",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "userId",
+							"value": "8f1b7d3f-4e3b-4f5e-9b2a-7d2a6b9f1c05",
+							"type": "text"
+						},
+						{
+							"key": "file",
+							"description": "Archivo CSV con productos a procesar",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/import",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"import"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener Historial de cargues masivos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response has success structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/history",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"history"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener Historial de cargues masivos - Página 1 con 5 elementos Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response has success structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/history?page=1&per_page=5",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"history"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "per_page",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Agregar Cantidad",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener o crear un producto para las pruebas",
+							"let productId = pm.environment.get('test_product_id');",
+							"",
+							"if (!productId) {",
+							"    // Si no existe un producto de prueba, crear uno",
+							"    const randomSku = 'MED-' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');",
+							"    const productData = {",
+							"        sku: randomSku,",
+							"        name: 'Producto Test Stock Dinámico',",
+							"        expiration_date: '2025-12-31',",
+							"        quantity: 20,",
+							"        price: 30.00,",
+							"        location: 'A-01-01',",
+							"        description: 'Producto creado dinámicamente para pruebas de stock',",
+							"        product_type: 'Alto valor',",
+							"        provider_id: '123e4567-e89b-12d3-a456-426614174000'",
+							"    };",
+							"    ",
+							"    // Crear el producto",
+							"    pm.sendRequest({",
+							"        url: pm.environment.get('url_local_inventario') + '/inventory/products',",
+							"        method: 'POST',",
+							"        header: {",
+							"            'Content-Type': 'application/json'",
+							"        },",
+							"        body: {",
+							"            mode: 'raw',",
+							"            raw: JSON.stringify(productData)",
+							"        }",
+							"    }, function (err, response) {",
+							"        if (response.code === 201) {",
+							"            const responseData = response.json();",
+							"            productId = responseData.data.id;",
+							"            pm.environment.set('test_product_id', productId);",
+							"            console.log(`Producto creado dinámicamente con ID: ${productId}`);",
+							"        } else {",
+							"            console.error('Error creando producto:', response.json());",
+							"        }",
+							"    });",
+							"}",
+							"",
+							"const quantity = Math.floor(Math.random() * 20) + 1; // 1-20",
+							"",
+							"// Guardar datos para el test",
+							"pm.environment.set('test_quantity', quantity);",
+							"pm.environment.set('test_product_id', productId);",
+							"",
+							"console.log(`Actualizando stock del producto ${productId} agregando ${quantity} unidades`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('message');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar datos de actualización",
+							"pm.test('Stock update data', function () {",
+							"    const response = pm.response.json();",
+							"    const data = response.data;",
+							"    ",
+							"    pm.expect(data).to.have.property('product_id');",
+							"    pm.expect(data).to.have.property('previous_quantity');",
+							"    pm.expect(data).to.have.property('new_quantity');",
+							"    pm.expect(data).to.have.property('operation');",
+							"    pm.expect(data).to.have.property('quantity_changed');",
+							"    ",
+							"    pm.expect(data.operation).to.eql('add');",
+							"    pm.expect(data.quantity_changed).to.eql(parseInt(pm.environment.get('test_quantity')));",
+							"    pm.expect(data.new_quantity).to.eql(data.previous_quantity + data.quantity_changed);",
+							"});",
+							"",
+							"console.log('Stock actualizado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"add\",\n    \"quantity\": {{test_quantity}},\n    \"reason\": \"restock\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{test_product_id}}",
+						"stock"
+					]
+				},
+				"description": "Agregar cantidad al stock de un producto"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Restar Cantidad",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener el producto de prueba creado dinámicamente",
+							"let productId = pm.environment.get('test_product_id');",
+							"",
+							"if (!productId) {",
+							"    console.error('No se encontró un producto de prueba. Ejecutar primero el test de agregar cantidad.');",
+							"    return;",
+							"}",
+							"",
+							"const quantity = Math.floor(Math.random() * 5) + 1; // 1-5 (cantidad pequeña para evitar errores)",
+							"",
+							"// Guardar datos para el test",
+							"pm.environment.set('test_quantity_subtract', quantity);",
+							"pm.environment.set('test_product_id_subtract', productId);",
+							"",
+							"console.log(`Actualizando stock del producto ${productId} restando ${quantity} unidades`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('message');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar datos de actualización",
+							"pm.test('Stock update data', function () {",
+							"    const response = pm.response.json();",
+							"    const data = response.data;",
+							"    ",
+							"    pm.expect(data).to.have.property('product_id');",
+							"    pm.expect(data).to.have.property('previous_quantity');",
+							"    pm.expect(data).to.have.property('new_quantity');",
+							"    pm.expect(data).to.have.property('operation');",
+							"    pm.expect(data).to.have.property('quantity_changed');",
+							"    ",
+							"    pm.expect(data.operation).to.eql('subtract');",
+							"    pm.expect(data.quantity_changed).to.eql(parseInt(pm.environment.get('test_quantity_subtract')));",
+							"    pm.expect(data.new_quantity).to.eql(data.previous_quantity - data.quantity_changed);",
+							"});",
+							"",
+							"console.log('Stock actualizado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"subtract\",\n    \"quantity\": {{test_quantity_subtract}},\n    \"reason\": \"order_fulfillment\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id_subtract}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{test_product_id_subtract}}",
+						"stock"
+					]
+				},
+				"description": "Restar cantidad del stock de un producto"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Producto No Encontrado",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about product not found', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('Producto con ID 99999 no encontrado');",
+							"});",
+							"",
+							"console.log('Error de producto no encontrado verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"add\",\n    \"quantity\": 10,\n    \"reason\": \"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/99999/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"99999",
+						"stock"
+					]
+				},
+				"description": "Error cuando el producto no existe"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Stock Insuficiente",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener el producto de prueba creado dinámicamente",
+							"let productId = pm.environment.get('test_product_id');",
+							"",
+							"if (!productId) {",
+							"    console.error('No se encontró un producto de prueba. Ejecutar primero el test de agregar cantidad.');",
+							"    return;",
+							"}",
+							"",
+							"pm.environment.set('test_product_id_insufficient', productId);",
+							"",
+							"console.log(`Probando stock insuficiente para producto ${productId}`);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about insufficient stock', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('Stock insuficiente');",
+							"});",
+							"",
+							"console.log('Error de stock insuficiente verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"subtract\",\n    \"quantity\": 99999,\n    \"reason\": \"test_insufficient_stock\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{test_product_id_insufficient}}/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{test_product_id_insufficient}}",
+						"stock"
+					]
+				},
+				"description": "Error cuando no hay stock suficiente para restar"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Operación Inválida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid operation', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('La operación debe ser \\'add\\' o \\'subtract\\'');",
+							"});",
+							"",
+							"console.log('Error de operación inválida verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"multiply\",\n    \"quantity\": 10,\n    \"reason\": \"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/1/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"1",
+						"stock"
+					]
+				},
+				"description": "Error cuando la operación no es válida"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Cantidad Inválida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about invalid quantity', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('La cantidad debe ser un número mayor a 0');",
+							"});",
+							"",
+							"console.log('Error de cantidad inválida verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operation\": \"add\",\n    \"quantity\": -5,\n    \"reason\": \"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/1/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"1",
+						"stock"
+					]
+				},
+				"description": "Error cuando la cantidad es inválida (negativa)"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Stock - Error Sin JSON",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea de error",
+							"pm.test('Status code is 400', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Validar estructura de error",
+							"pm.test('Error response structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response.success).to.be.false;",
+							"});",
+							"",
+							"// Validar mensaje de error específico",
+							"pm.test('Error message about missing JSON', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.details).to.include('Se requiere un cuerpo JSON');",
+							"});",
+							"",
+							"console.log('Error de JSON faltante verificado exitosamente');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/1/stock",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"1",
+						"stock"
+					]
+				},
+				"description": "Error cuando no se proporciona JSON"
+			},
+			"response": []
+		},
+		{
+			"name": "Limpiar Producto de Prueba",
+			"event": [
+				{
+					"listen": "pre-request",
+					"script": {
+						"exec": [
+							"// Obtener el ID del producto de prueba",
+							"const productId = pm.environment.get('test_product_id');",
+							"",
+							"if (productId) {",
+							"    console.log(`Eliminando producto de prueba con ID: ${productId}`);",
+							"    pm.environment.set('cleanup_product_id', productId);",
+							"} else {",
+							"    console.log('No hay producto de prueba para limpiar');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la limpieza fue exitosa",
+							"pm.test('Cleanup successful', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Limpiar variables de entorno",
+							"pm.environment.unset('test_product_id');",
+							"pm.environment.unset('test_quantity');",
+							"pm.environment.unset('test_quantity_subtract');",
+							"pm.environment.unset('test_product_id_subtract');",
+							"pm.environment.unset('test_product_id_insufficient');",
+							"pm.environment.unset('test_product_id_invalid_op');",
+							"pm.environment.unset('cleanup_product_id');",
+							"",
+							"console.log('Variables de entorno limpiadas');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/products/{{cleanup_product_id}}",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"products",
+						"{{cleanup_product_id}}"
+					]
+				},
+				"description": "Eliminar el producto de prueba creado dinámicamente"
 			},
 			"response": []
 		}

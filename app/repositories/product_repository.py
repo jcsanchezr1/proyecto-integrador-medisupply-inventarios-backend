@@ -13,7 +13,6 @@ from .base_repository import BaseRepository
 from ..models.product import Product
 from ..config.settings import Config
 
-# Configuración de SQLAlchemy
 Base = declarative_base()
 
 
@@ -43,11 +42,9 @@ class ProductRepository(BaseRepository):
     """
     
     def __init__(self):
-        # Configuración de la base de datos
         self.engine = create_engine(Config.DATABASE_URL)
         self.Session = sessionmaker(bind=self.engine)
         
-        # Crear tablas si no existen
         try:
             Base.metadata.create_all(self.engine)
         except Exception as e:
@@ -173,22 +170,57 @@ class ProductRepository(BaseRepository):
         finally:
             session.close()
     
-    def get_all(self) -> List[Product]:
+    def get_all(self, limit: Optional[int] = None, offset: int = 0, 
+                sku: Optional[str] = None, name: Optional[str] = None, 
+                expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+                price: Optional[float] = None, location: Optional[str] = None) -> List[Product]:
         """
-        Obtiene todos los productos
+        Obtiene todos los productos con paginación y filtros opcionales
         
+        Args:
+            limit: Límite de productos a obtener (opcional)
+            offset: Desplazamiento para paginación
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
+            
         Returns:
-            List[Product]: Lista de todos los productos
+            List[Product]: Lista de productos
             
         Raises:
             Exception: Si hay error en la base de datos
         """
         session = self._get_session()
         try:
-            db_products = session.query(ProductDB).all()
+            query = session.query(ProductDB)
+            
+            # Aplicar filtros
+            if sku:
+                query = query.filter(ProductDB.sku.ilike(f'%{sku}%'))
+            if name:
+                query = query.filter(ProductDB.name.ilike(f'%{name}%'))
+            if expiration_date:
+                query = query.filter(ProductDB.expiration_date == expiration_date)
+            if quantity is not None:
+                query = query.filter(ProductDB.quantity == quantity)
+            if price is not None:
+                query = query.filter(ProductDB.price == price)
+            if location:
+                query = query.filter(ProductDB.location.ilike(f'%{location}%'))
+            
+            # Aplicar paginación
+            if limit:
+                query = query.limit(limit)
+            if offset:
+                query = query.offset(offset)
+            
+            db_products = query.all()
             return [self._db_to_model(db_product) for db_product in db_products]
         except SQLAlchemyError as e:
-            raise Exception(f"Error al obtener todos los productos: {str(e)}")
+            raise Exception(f"Error al obtener productos: {str(e)}")
         finally:
             session.close()
     
@@ -283,10 +315,20 @@ class ProductRepository(BaseRepository):
         finally:
             session.close()
     
-    def count(self) -> int:
+    def count(self, sku: Optional[str] = None, name: Optional[str] = None, 
+              expiration_date: Optional[str] = None, quantity: Optional[int] = None,
+              price: Optional[float] = None, location: Optional[str] = None) -> int:
         """
-        Cuenta el total de productos
+        Cuenta el total de productos con filtros opcionales
         
+        Args:
+            sku: Filtrar por SKU (búsqueda parcial, case-insensitive)
+            name: Filtrar por nombre (búsqueda parcial, case-insensitive)
+            expiration_date: Filtrar por fecha de vencimiento (formato YYYY-MM-DD)
+            quantity: Filtrar por cantidad exacta
+            price: Filtrar por precio exacto
+            location: Filtrar por ubicación (búsqueda parcial, case-insensitive)
+            
         Returns:
             int: Número total de productos
             
@@ -295,8 +337,83 @@ class ProductRepository(BaseRepository):
         """
         session = self._get_session()
         try:
-            return session.query(ProductDB).count()
+            query = session.query(ProductDB)
+            
+            # Aplicar filtros
+            if sku:
+                query = query.filter(ProductDB.sku.ilike(f'%{sku}%'))
+            if name:
+                query = query.filter(ProductDB.name.ilike(f'%{name}%'))
+            if expiration_date:
+                query = query.filter(ProductDB.expiration_date == expiration_date)
+            if quantity is not None:
+                query = query.filter(ProductDB.quantity == quantity)
+            if price is not None:
+                query = query.filter(ProductDB.price == price)
+            if location:
+                query = query.filter(ProductDB.location.ilike(f'%{location}%'))
+            
+            return query.count()
         except SQLAlchemyError as e:
             raise Exception(f"Error al contar productos: {str(e)}")
+        finally:
+            session.close()
+    
+    def update_stock(self, product_id: int, operation: str, quantity: int) -> dict:
+        """
+        Actualiza el stock de un producto
+        
+        Args:
+            product_id: ID del producto a actualizar
+            operation: Operación a realizar ("add" o "subtract")
+            quantity: Cantidad a sumar o restar
+            
+        Returns:
+            dict: Información de la actualización realizada
+            
+        Raises:
+            ValueError: Si el producto no existe o no hay stock suficiente
+            Exception: Si hay error en la base de datos
+        """
+        session = self._get_session()
+        try:
+            db_product = session.query(ProductDB).filter(ProductDB.id == product_id).first()
+            if not db_product:
+                raise ValueError(f"Producto con ID {product_id} no encontrado")
+
+            if operation not in ["add", "subtract"]:
+                raise ValueError("La operación debe ser 'add' o 'subtract'")
+
+            if quantity <= 0:
+                raise ValueError("La cantidad debe ser mayor a 0")
+
+            current_quantity = db_product.quantity
+
+            if operation == "add":
+                new_quantity = current_quantity + quantity
+            else:
+                new_quantity = current_quantity - quantity
+                if new_quantity < 0:
+                    raise ValueError(f"Stock insuficiente. Disponible: {current_quantity}, Solicitado: {quantity}")
+
+            db_product.quantity = new_quantity
+            db_product.updated_at = datetime.utcnow()
+            
+            session.commit()
+            
+            return {
+                "product_id": product_id,
+                "previous_quantity": current_quantity,
+                "new_quantity": new_quantity,
+                "operation": operation,
+                "quantity_changed": quantity
+            }
+            
+        except ValueError:
+            session.rollback()
+            raise
+        except SQLAlchemyError as e:
+            session.rollback()
+            raise Exception(f"Error al actualizar stock del producto: {str(e)}")
         finally:
             session.close()

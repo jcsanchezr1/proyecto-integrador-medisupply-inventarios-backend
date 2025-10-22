@@ -31,10 +31,30 @@ def pytest_configure(config):
     mock_image.verify.return_value = None
     mock_pil.Image = mock_image
     
+    # Mock para pandas
+    mock_pandas = MagicMock()
+    mock_df = MagicMock()
+    mock_df.__len__ = MagicMock(return_value=50)
+    mock_pandas.read_csv = MagicMock(return_value=mock_df)
+    mock_pandas.read_excel = MagicMock(return_value=mock_df)
+    
+    # Mock para openpyxl
+    mock_openpyxl = MagicMock()
+    
+    # Mock para Google Cloud Pub/Sub
+    mock_pubsub = MagicMock()
+    mock_publisher = MagicMock()
+    mock_pubsub.PublisherClient = MagicMock(return_value=mock_publisher)
+    
     # Aplicar mocks a sys.modules
     sys.modules['google'] = MagicMock()
     sys.modules['google.cloud'] = MagicMock()
     sys.modules['google.cloud.storage'] = mock_storage
     sys.modules['google.cloud.exceptions'] = mock_google_cloud_error
+    sys.modules['google.cloud.pubsub_v1'] = mock_pubsub
+    sys.modules['google.auth'] = MagicMock()
+    sys.modules['google.auth.impersonated_credentials'] = MagicMock()
     sys.modules['PIL'] = mock_pil
     sys.modules['PIL.Image'] = mock_image
+    sys.modules['pandas'] = mock_pandas
+    sys.modules['openpyxl'] = mock_openpyxl

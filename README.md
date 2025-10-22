@@ -85,9 +85,11 @@ Estructura básica preparada para escalar:
 - `GET /inventory/ping` - Ping simple
 
 ### Productos
-- `GET /inventory/products` - Obtener todos los productos
+- `GET /inventory/products` - Obtener todos los productos (con paginación)
+- `GET /inventory/products/filter` - Filtrar productos con criterios específicos
 - `GET /inventory/products/{id}` - Obtener producto por ID
 - `POST /inventory/products` - Crear nuevo producto
+- `PUT /inventory/products/{id}/stock` - Actualizar stock de un producto
 - `DELETE /inventory/products/{id}` - Eliminar producto por ID
 - `DELETE /inventory/products/delete-all` - Eliminar todos los productos
 
@@ -117,7 +119,7 @@ Estructura básica preparada para escalar:
 ### Validaciones de Producto
 
 - **SKU**: Formato "MED-XXXX" (4 dígitos numéricos), único
-- **Nombre**: Alfanumérico y espacios, mínimo 3 caracteres
+- **Nombre**: Alfanumérico, espacios y tildes, mínimo 3 caracteres
 - **Fecha de vencimiento**: Debe ser futura
 - **Cantidad**: Entero positivo (1-9999)
 - **Precio**: Numérico positivo en COP
@@ -155,7 +157,130 @@ BUCKET_FOLDER=products
 GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-credentials.json
 ```
 
-## Colección de Postman
+## Filtrado de Productos
+
+### Endpoint de Filtros
+`GET /inventory/products/filter` - Permite filtrar productos usando múltiples criterios
+
+### Parámetros de Filtro Disponibles
+
+| Parámetro | Tipo | Descripción | Ejemplo |
+|-----------|------|-------------|---------|
+| `sku` | string | Búsqueda parcial en SKU (case-insensitive) | `sku=MED` |
+| `name` | string | Búsqueda parcial en nombre (case-insensitive) | `name=Paracetamol` |
+| `expiration_date` | string | Fecha exacta de vencimiento (YYYY-MM-DD) | `expiration_date=2025-12-31` |
+| `quantity` | integer | Cantidad exacta | `quantity=100` |
+| `price` | float | Precio exacto | `price=15.50` |
+| `location` | string | Búsqueda parcial en ubicación (case-insensitive) | `location=A-01` |
+
+### Parámetros de Paginación
+
+| Parámetro | Tipo | Descripción | Valor por defecto | Rango |
+|-----------|------|-------------|-------------------|------|
+| `page` | integer | Número de página | 1 | ≥ 1 |
+| `per_page` | integer | Elementos por página | 10 | 1-100 |
+
+### Combinaciones de Filtros
+
+Puedes combinar múltiples filtros en la misma consulta:
+
+```bash
+# Filtro simple
+curl "http://localhost:8084/inventory/products/filter?sku=MED"
+
+# Dos filtros
+curl "http://localhost:8084/inventory/products/filter?sku=MED&name=Paracetamol"
+
+# Tres filtros
+curl "http://localhost:8084/inventory/products/filter?sku=MED&name=Paracetamol&quantity=100"
+
+# Todos los filtros
+curl "http://localhost:8084/inventory/products/filter?sku=MED&name=Paracetamol&quantity=100&price=15.50&location=A-01&expiration_date=2025-12-31"
+
+# Con paginación
+curl "http://localhost:8084/inventory/products/filter?sku=MED&page=1&per_page=5"
+```
+
+### Respuesta del Endpoint de Filtros
+
+```json
+{
+  "success": true,
+  "message": "Productos filtrados obtenidos exitosamente",
+  "data": {
+    "products": [
+      {
+        "id": 65,
+        "sku": "MED-1234",
+        "name": "Paracetamol 500mg",
+        "expiration_date": "2025-12-31T00:00:00",
+        "quantity": 100,
+        "price": 15.5,
+        "location": "A-01-01",
+        "description": "Analgésico y antipirético",
+        "product_type": "Alto valor",
+        "provider_id": "df3bdc3f-7783-4c1e-981a-8060b114dfb2",
+        "photo_filename": null,
+        "photo_url": null,
+        "created_at": "2025-10-21T01:27:51.224416",
+        "updated_at": "2025-10-21T01:27:51.224420"
+      }
+    ],
+    "filters_applied": {
+      "sku": "MED",
+      "name": null,
+      "expiration_date": null,
+      "quantity": null,
+      "price": null,
+      "location": null
+    },
+    "pagination": {
+      "page": 1,
+      "per_page": 10,
+      "total": 4,
+      "total_pages": 1,
+      "has_next": false,
+      "has_prev": false,
+      "next_page": null,
+      "prev_page": null
+    }
+  }
+}
+```
+
+### Validaciones y Errores
+
+#### Error: Sin filtros
+```json
+{
+  "success": false,
+  "error": "Debe proporcionar al menos un filtro de búsqueda"
+}
+```
+
+#### Error: Formato de fecha inválido
+```json
+{
+  "success": false,
+  "error": "El formato de 'expiration_date' debe ser YYYY-MM-DD"
+}
+```
+
+#### Error: Parámetros de paginación inválidos
+```json
+{
+  "success": false,
+  "error": "El parámetro 'page' debe ser mayor a 0"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "El parámetro 'per_page' debe estar entre 1 y 100"
+}
+```
+
 
 El proyecto incluye una colección de Postman completa con casos de prueba:
 
@@ -327,6 +452,77 @@ tests/
 ```
 
 
+
+## Actualización de Stock
+
+### Endpoint: `PUT /inventory/products/{product_id}/stock`
+
+Permite actualizar el stock de un producto específico mediante operaciones de suma o resta.
+
+#### Request Body
+```json
+{
+    "operation": "add|subtract",
+    "quantity": 10,
+    "reason": "restock|order_fulfillment|adjustment"
+}
+```
+
+#### Parámetros
+- **operation** (string, requerido): Operación a realizar
+  - `"add"`: Sumar cantidad al stock
+  - `"subtract"`: Restar cantidad del stock
+- **quantity** (integer, requerido): Cantidad a sumar o restar (debe ser > 0)
+- **reason** (string, opcional): Motivo del cambio de stock
+
+#### Respuesta Exitosa (200)
+```json
+{
+    "success": true,
+    "message": "Stock actualizado exitosamente",
+    "data": {
+        "product_id": 1,
+        "previous_quantity": 50,
+        "new_quantity": 60,
+        "operation": "add",
+        "quantity_changed": 10
+    }
+}
+```
+
+#### Errores
+
+**400 - Error de Validación:**
+```json
+{
+    "success": false,
+    "error": "Error de validación",
+    "details": "La operación debe ser 'add' o 'subtract'"
+}
+```
+
+**422 - Error de Lógica de Negocio:**
+```json
+{
+    "success": false,
+    "error": "Error de lógica de negocio",
+    "details": "Stock insuficiente. Disponible: 5, Solicitado: 10"
+}
+```
+
+#### Casos de Uso
+
+1. **Restock de productos**: `{"operation": "add", "quantity": 100}`
+2. **Fulfillment de pedidos**: `{"operation": "subtract", "quantity": 5}`
+3. **Ajustes de inventario**: `{"operation": "add", "quantity": 2, "reason": "adjustment"}`
+
+#### Validaciones
+
+- El producto debe existir
+- La operación debe ser válida (`add` o `subtract`)
+- La cantidad debe ser mayor a 0
+- Para operaciones `subtract`, debe haber stock suficiente
+- El `product_id` debe ser un entero válido
 
 ## Desarrollo
 

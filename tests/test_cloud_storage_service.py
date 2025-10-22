@@ -103,10 +103,10 @@ class TestCloudStorageService:
         
         result = service.get_image_url("test-image.jpg")
         
-        # Debe retornar URL directa como fallback cuando el blob no existe
-        expected_url = "https://storage.googleapis.com/test-bucket/products/test-image.jpg"
-        assert result == expected_url
-        # No verificar exists porque se ejecuta dentro del try-catch
+        # Debe retornar cadena vacía cuando el blob no existe
+        assert result == ""
+        # Verificar que se llamó exists
+        mock_blob.exists.assert_called_once()
 
 
     def test_upload_image_google_cloud_error(self, cloud_service):
