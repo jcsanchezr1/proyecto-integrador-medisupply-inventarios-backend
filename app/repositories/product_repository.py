@@ -13,7 +13,6 @@ from .base_repository import BaseRepository
 from ..models.product import Product
 from ..config.settings import Config
 
-# Configuración de SQLAlchemy
 Base = declarative_base()
 
 
@@ -43,11 +42,9 @@ class ProductRepository(BaseRepository):
     """
     
     def __init__(self):
-        # Configuración de la base de datos
         self.engine = create_engine(Config.DATABASE_URL)
         self.Session = sessionmaker(bind=self.engine)
         
-        # Crear tablas si no existen
         try:
             Base.metadata.create_all(self.engine)
         except Exception as e:
@@ -359,5 +356,64 @@ class ProductRepository(BaseRepository):
             return query.count()
         except SQLAlchemyError as e:
             raise Exception(f"Error al contar productos: {str(e)}")
+        finally:
+            session.close()
+    
+    def update_stock(self, product_id: int, operation: str, quantity: int) -> dict:
+        """
+        Actualiza el stock de un producto
+        
+        Args:
+            product_id: ID del producto a actualizar
+            operation: Operación a realizar ("add" o "subtract")
+            quantity: Cantidad a sumar o restar
+            
+        Returns:
+            dict: Información de la actualización realizada
+            
+        Raises:
+            ValueError: Si el producto no existe o no hay stock suficiente
+            Exception: Si hay error en la base de datos
+        """
+        session = self._get_session()
+        try:
+            db_product = session.query(ProductDB).filter(ProductDB.id == product_id).first()
+            if not db_product:
+                raise ValueError(f"Producto con ID {product_id} no encontrado")
+
+            if operation not in ["add", "subtract"]:
+                raise ValueError("La operación debe ser 'add' o 'subtract'")
+
+            if quantity <= 0:
+                raise ValueError("La cantidad debe ser mayor a 0")
+
+            current_quantity = db_product.quantity
+
+            if operation == "add":
+                new_quantity = current_quantity + quantity
+            else:
+                new_quantity = current_quantity - quantity
+                if new_quantity < 0:
+                    raise ValueError(f"Stock insuficiente. Disponible: {current_quantity}, Solicitado: {quantity}")
+
+            db_product.quantity = new_quantity
+            db_product.updated_at = datetime.utcnow()
+            
+            session.commit()
+            
+            return {
+                "product_id": product_id,
+                "previous_quantity": current_quantity,
+                "new_quantity": new_quantity,
+                "operation": operation,
+                "quantity_changed": quantity
+            }
+            
+        except ValueError:
+            session.rollback()
+            raise
+        except SQLAlchemyError as e:
+            session.rollback()
+            raise Exception(f"Error al actualizar stock del producto: {str(e)}")
         finally:
             session.close()

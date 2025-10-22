@@ -35,26 +35,17 @@ class ProductService:
             BusinessLogicError: Si hay errores de lógica de negocio
         """
         try:
-            # Validar datos requeridos
             self._validate_required_fields(product_data)
-            
-            # Procesar archivo de foto si se proporciona
             if photo_file is not None:
                 photo_filename, photo_url = self._process_photo_file(photo_file)
                 if photo_filename:
                     product_data['photo_filename'] = photo_filename
                     product_data['photo_url'] = photo_url
             
-            # Crear instancia del producto
             product = self._create_product_instance(product_data)
-            
-            # Validar reglas de negocio
             self._validate_business_rules(product)
-            
-            # Crear producto en el repositorio
             created_product = self.product_repository.create(product)
             
-            # Generar URL si tiene foto
             if created_product.photo_filename:
                 created_product.photo_url = self.cloud_storage_service.get_image_url(created_product.photo_filename)
             
@@ -83,7 +74,6 @@ class ProductService:
         try:
             product = self.product_repository.get_by_id(product_id)
             if product and product.photo_filename:
-                # Generar URL fresca para la foto
                 product.photo_url = self.cloud_storage_service.get_image_url(product.photo_filename)
             return product
         except Exception as e:
@@ -136,7 +126,6 @@ class ProductService:
                 expiration_date=expiration_date, quantity=quantity,
                 price=price, location=location
             )
-            # Generar URLs para todos los productos que tengan foto
             for product in products:
                 if product.photo_filename:
                     product.photo_url = self.cloud_storage_service.get_image_url(product.photo_filename)
@@ -219,7 +208,6 @@ class ProductService:
             BusinessLogicError: Si hay error en la operación
         """
         try:
-            # Verificar que el producto existe
             product = self.product_repository.get_by_id(product_id)
             if not product:
                 raise BusinessLogicError("Producto no encontrado")
@@ -283,11 +271,8 @@ class ProductService:
             ValidationError: Si hay error en la conversión de datos
         """
         try:
-            # Convertir todos los tipos de datos antes de crear el objeto
             sku = str(product_data['sku'])
             name = str(product_data['name'])
-            
-            # Convertir fecha de vencimiento
             expiration_date = product_data['expiration_date']
             if isinstance(expiration_date, str):
                 try:
@@ -297,7 +282,6 @@ class ProductService:
             elif not isinstance(expiration_date, datetime):
                 raise ValidationError("La fecha de vencimiento debe ser un datetime o string válido")
             
-            # Convertir cantidad, precio y provider_id
             try:
                 quantity = int(product_data['quantity'])
                 price = float(product_data['price'])
@@ -335,12 +319,10 @@ class ProductService:
         Raises:
             BusinessLogicError: Si hay violación de reglas de negocio
         """
-        # Validar que el SKU sea único
         existing_product = self.product_repository.get_by_sku(product.sku)
         if existing_product:
             raise BusinessLogicError("El SKU ya existe en el sistema. Utilice un SKU único.")
         
-        # Validar que el producto sea válido según el modelo
         product.validate()
     
     def _process_photo_file(self, photo_file: Optional[FileStorage]) -> tuple[Optional[str], Optional[str]]:
@@ -382,7 +364,6 @@ class ProductService:
             if not success:
                 raise ValidationError(f"Error al subir imagen: {message}")
             
-            # Generar URL firmada
             signed_url = self.cloud_storage_service.get_image_url(unique_filename)
             
             return unique_filename, signed_url
@@ -409,3 +390,40 @@ class ProductService:
         allowed_extensions = {'jpg', 'jpeg', 'png', 'gif'}
         
         return extension in allowed_extensions
+    
+    def update_stock(self, product_id: int, operation: str, quantity: int) -> dict:
+        """
+        Actualiza el stock de un producto
+        
+        Args:
+            product_id: ID del producto a actualizar
+            operation: Operación a realizar ("add" o "subtract")
+            quantity: Cantidad a sumar o restar
+            
+        Returns:
+            dict: Información de la actualización realizada
+            
+        Raises:
+            ValidationError: Si hay errores de validación
+            BusinessLogicError: Si hay errores de lógica de negocio
+        """
+        try:
+            if not product_id or product_id <= 0:
+                raise ValidationError("El ID del producto debe ser válido")
+            
+            if not operation or operation not in ["add", "subtract"]:
+                raise ValidationError("La operación debe ser 'add' o 'subtract'")
+            
+            if not quantity or quantity <= 0:
+                raise ValidationError("La cantidad debe ser mayor a 0")
+
+            result = self.product_repository.update_stock(product_id, operation, quantity)
+            
+            return result
+            
+        except ValueError as e:
+            raise BusinessLogicError(str(e))
+        except Exception as e:
+            if isinstance(e, (ValidationError, BusinessLogicError)):
+                raise
+            raise BusinessLogicError(f"Error al actualizar stock del producto: {str(e)}")
