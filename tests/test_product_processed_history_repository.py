@@ -180,7 +180,7 @@ class TestProductProcessedHistoryRepository:
         mock_session.close.assert_called_once()
     
     def test_get_by_user_id_success(self, repository, mock_session):
-        """Test: Obtener registros por user_id exitosamente"""
+        """Test: Obtener registros por user_id exitosamente con offset"""
         repository._get_session = MagicMock(return_value=mock_session)
         
         mock_db_history = MagicMock()
@@ -192,13 +192,85 @@ class TestProductProcessedHistoryRepository:
         mock_db_history.created_at = datetime.utcnow()
         mock_db_history.updated_at = None
         
+        # Configurar el mock con el chain completo incluyendo offset
+        mock_all = MagicMock()
+        mock_all.all.return_value = [mock_db_history]
+        
+        mock_limit = MagicMock()
+        mock_limit.offset.return_value = mock_all
+        mock_limit.all.return_value = [mock_db_history]  # Para cuando no hay offset
+        
+        mock_order_by = MagicMock()
+        mock_order_by.limit.return_value = mock_limit
+        
+        mock_filter = MagicMock()
+        mock_filter.order_by.return_value = mock_order_by
+        
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [mock_db_history]
+        mock_query.filter.return_value = mock_filter
+        
         mock_session.query.return_value = mock_query
         
-        result = repository.get_by_user_id('user123', limit=10)
+        # Test con offset = 10
+        result = repository.get_by_user_id('user123', limit=10, offset=10)
         
         assert len(result) == 1
         assert result[0].user_id == 'user123'
+        mock_session.close.assert_called_once()
+    
+    def test_get_count_success(self, repository, mock_session):
+        """Test: Obtener conteo de registros exitosamente"""
+        repository._get_session = MagicMock(return_value=mock_session)
+        
+        mock_query = MagicMock()
+        mock_query.count.return_value = 25
+        mock_session.query.return_value = mock_query
+        
+        result = repository.get_count()
+        
+        assert result == 25
+        mock_session.query.assert_called_once()
+        mock_query.count.assert_called_once()
+        mock_session.close.assert_called_once()
+    
+    def test_get_count_with_user_id(self, repository, mock_session):
+        """Test: Obtener conteo de registros filtrado por user_id"""
+        repository._get_session = MagicMock(return_value=mock_session)
+        
+        mock_query = MagicMock()
+        mock_query.filter.return_value.count.return_value = 10
+        mock_session.query.return_value = mock_query
+        
+        result = repository.get_count(user_id='user123')
+        
+        assert result == 10
+        mock_query.filter.assert_called_once()
+        mock_session.close.assert_called_once()
+    
+    def test_get_count_zero(self, repository, mock_session):
+        """Test: Conteo retorna cero cuando no hay registros"""
+        repository._get_session = MagicMock(return_value=mock_session)
+        
+        mock_query = MagicMock()
+        mock_query.count.return_value = 0
+        mock_session.query.return_value = mock_query
+        
+        result = repository.get_count()
+        
+        assert result == 0
+        mock_session.close.assert_called_once()
+    
+    def test_get_count_with_error(self, repository, mock_session):
+        """Test: Error al obtener conteo"""
+        from sqlalchemy.exc import SQLAlchemyError
+        
+        repository._get_session = MagicMock(return_value=mock_session)
+        
+        mock_session.query.side_effect = SQLAlchemyError("Database error")
+        
+        with pytest.raises(Exception) as exc_info:
+            repository.get_count()
+        
+        assert "Error al obtener conteo de historial" in str(exc_info.value)
         mock_session.close.assert_called_once()
 

@@ -238,13 +238,14 @@ class ProductProcessedHistoryRepository(BaseRepository):
         finally:
             session.close()
     
-    def get_by_user_id(self, user_id: str, limit: Optional[int] = None) -> List[ProductProcessedHistory]:
+    def get_by_user_id(self, user_id: str, limit: Optional[int] = None, offset: int = 0) -> List[ProductProcessedHistory]:
         """
         Obtiene registros de historial por ID de usuario
         
         Args:
             user_id: ID del usuario
             limit: Límite de registros a obtener (opcional)
+            offset: Desplazamiento para paginación
             
         Returns:
             List[ProductProcessedHistory]: Lista de registros de historial del usuario
@@ -260,11 +261,39 @@ class ProductProcessedHistoryRepository(BaseRepository):
             
             if limit:
                 query = query.limit(limit)
+            if offset:
+                query = query.offset(offset)
             
             db_histories = query.all()
             return [self._db_to_model(db_history) for db_history in db_histories]
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener registros de historial por usuario: {str(e)}")
+        finally:
+            session.close()
+    
+    def get_count(self, user_id: Optional[str] = None) -> int:
+        """
+        Obtiene el conteo total de registros de historial
+        
+        Args:
+            user_id: ID del usuario para filtrar (opcional)
+            
+        Returns:
+            int: Número total de registros
+            
+        Raises:
+            Exception: Si hay error en la base de datos
+        """
+        session = self._get_session()
+        try:
+            query = session.query(ProductProcessedHistoryDB)
+            
+            if user_id:
+                query = query.filter(ProductProcessedHistoryDB.user_id == user_id)
+            
+            return query.count()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener conteo de historial: {str(e)}")
         finally:
             session.close()
 
