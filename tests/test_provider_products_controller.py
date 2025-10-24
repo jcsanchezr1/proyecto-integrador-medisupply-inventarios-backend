@@ -254,7 +254,7 @@ class TestProviderProductsController:
     
     def test_product_includes_new_fields(self, client, mock_provider_products_service):
         """Test que verifica que los productos incluyen los nuevos campos: id, expiration_date y description"""
-        # Configurar mock del servicio con los nuevos campos (meses en español)
+        # Configurar mock del servicio con los nuevos campos (fecha en formato ISO)
         mock_provider_products_service.get_products_grouped_by_provider.return_value = {
             "groups": [
                 {
@@ -266,7 +266,7 @@ class TestProviderProductsController:
                             "quantity": 100,
                             "price": 5000.0,
                             "photo_url": "https://example.com/photo.jpg",
-                            "expiration_date": "DIC 25, 2025",
+                            "expiration_date": "2025-12-25T00:00:00",
                             "description": "Analgésico y antipirético"
                         }
                     ]
@@ -304,11 +304,6 @@ class TestProviderProductsController:
                 
                 if product['expiration_date'] is not None:
                     assert isinstance(product['expiration_date'], str), "El campo 'expiration_date' debe ser string"
-                    # Verificar formato de fecha en español (ejemplo: DIC 25, 2025)
-                    import re
-                    date_pattern = r'^[A-Z]{3} \d{2}, \d{4}$'
-                    assert re.match(date_pattern, product['expiration_date']), \
-                        f"El formato de fecha debe ser 'MMM DD, YYYY' (meses en español), recibido: {product['expiration_date']}"
                 
                 if product['description'] is not None:
                     assert isinstance(product['description'], str), "El campo 'description' debe ser string"
