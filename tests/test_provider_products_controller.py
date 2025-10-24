@@ -251,3 +251,64 @@ class TestProviderProductsController:
         product_names = [p['name'] for p in abc_group['products']]
         assert "Paracetamol 500mg" in product_names
         assert "Ibuprofeno 400mg" in product_names
+    
+    def test_product_includes_new_fields(self, client, mock_provider_products_service):
+        """Test que verifica que los productos incluyen los nuevos campos: id, expiration_date y description"""
+        # Configurar mock del servicio con los nuevos campos (meses en español)
+        mock_provider_products_service.get_products_grouped_by_provider.return_value = {
+            "groups": [
+                {
+                    "provider": "Farmacia ABC",
+                    "products": [
+                        {
+                            "id": "123e4567-e89b-12d3-a456-426614174000",
+                            "name": "Paracetamol 500mg",
+                            "quantity": 100,
+                            "price": 5000.0,
+                            "photo_url": "https://example.com/photo.jpg",
+                            "expiration_date": "DIC 25, 2025",
+                            "description": "Analgésico y antipirético"
+                        }
+                    ]
+                }
+            ],
+            "message": "Productos agrupados por proveedor obtenidos exitosamente"
+        }
+        
+        response = client.get('/inventory/providers/products')
+        
+        assert response.status_code == 200
+        
+        data = json.loads(response.data)
+        groups = data['data']['groups']
+        
+        assert len(groups) > 0
+        
+        # Verificar que cada producto tiene los nuevos campos
+        for group in groups:
+            for product in group['products']:
+                # Verificar que los nuevos campos están presentes
+                assert 'id' in product, "El campo 'id' debe estar presente"
+                assert 'expiration_date' in product, "El campo 'expiration_date' debe estar presente"
+                assert 'description' in product, "El campo 'description' debe estar presente"
+                
+                # Verificar que los campos originales también están presentes
+                assert 'name' in product
+                assert 'quantity' in product
+                assert 'price' in product
+                assert 'photo_url' in product
+                
+                # Verificar tipos de datos
+                if product['id'] is not None:
+                    assert isinstance(product['id'], str), "El campo 'id' debe ser string"
+                
+                if product['expiration_date'] is not None:
+                    assert isinstance(product['expiration_date'], str), "El campo 'expiration_date' debe ser string"
+                    # Verificar formato de fecha en español (ejemplo: DIC 25, 2025)
+                    import re
+                    date_pattern = r'^[A-Z]{3} \d{2}, \d{4}$'
+                    assert re.match(date_pattern, product['expiration_date']), \
+                        f"El formato de fecha debe ser 'MMM DD, YYYY' (meses en español), recibido: {product['expiration_date']}"
+                
+                if product['description'] is not None:
+                    assert isinstance(product['description'], str), "El campo 'description' debe ser string"
