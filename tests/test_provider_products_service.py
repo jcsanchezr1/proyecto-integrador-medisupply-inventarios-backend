@@ -295,7 +295,7 @@ class TestProviderProductsService:
             assert "Error al obtener productos agrupados por proveedor" in str(exc_info.value)
     
     def test_expiration_date_format(self, mock_provider_service):
-        """Test que verifica el formato correcto de la fecha de expiración en español"""
+        """Test que verifica que la fecha de expiración se devuelve en formato ISO"""
         service = ProviderProductsService()
         
         # Crear una fecha específica para probar el formato
@@ -321,15 +321,13 @@ class TestProviderProductsService:
         # Obtener el producto del resultado
         product = grouped["provider-1"][0]
         
-        # Verificar formato de fecha en español: OCT 23, 2025
-        assert product["expiration_date"] == "OCT 23, 2025", \
-            f"El formato de fecha debe ser 'OCT 23, 2025', pero se obtuvo: {product['expiration_date']}"
+        # Verificar que la fecha se devuelve en formato ISO
+        assert product["expiration_date"] == "2025-10-23T00:00:00", \
+            f"El formato de fecha debe ser ISO (YYYY-MM-DDTHH:MM:SS), pero se obtuvo: {product['expiration_date']}"
         
-        # Verificar con una expresión regular
-        import re
-        date_pattern = r'^[A-Z]{3} \d{2}, \d{4}$'
-        assert re.match(date_pattern, product["expiration_date"]), \
-            "El formato de fecha debe cumplir con el patrón MMM DD, YYYY (ejemplo: OCT 23, 2025)"
+        # Verificar que es un string
+        assert isinstance(product["expiration_date"], str), \
+            "La fecha debe ser un string en formato ISO"
     
     def test_expiration_date_none(self, mock_provider_service):
         """Test que verifica el manejo de fecha de expiración nula"""
@@ -389,58 +387,13 @@ class TestProviderProductsService:
         # Obtener el producto del resultado
         product = grouped["provider-1"][0]
         
-        # Verificar formato de fecha en español: OCT 23, 2025
-        assert product["expiration_date"] == "OCT 23, 2025", \
-            f"El formato de fecha debe ser 'OCT 23, 2025', pero se obtuvo: {product['expiration_date']}"
+        # Verificar que la fecha se mantiene como string (como viene de BD)
+        assert product["expiration_date"] == test_date_str, \
+            f"La fecha debe mantenerse como viene de BD: '{test_date_str}', pero se obtuvo: {product['expiration_date']}"
         
-        # Verificar con una expresión regular
-        import re
-        date_pattern = r'^[A-Z]{3} \d{2}, \d{4}$'
-        assert re.match(date_pattern, product["expiration_date"]), \
-            "El formato de fecha debe cumplir con el patrón MMM DD, YYYY cuando viene como string"
-    
-    def test_expiration_date_different_months(self, mock_provider_service):
-        """Test que verifica que los meses se devuelven correctamente en español"""
-        service = ProviderProductsService()
-        
-        # Diccionario de meses a probar
-        test_cases = [
-            (datetime(2025, 1, 15), "ENE 15, 2025"),
-            (datetime(2025, 2, 10), "FEB 10, 2025"),
-            (datetime(2025, 3, 5), "MAR 05, 2025"),
-            (datetime(2025, 4, 20), "ABR 20, 2025"),
-            (datetime(2025, 5, 25), "MAY 25, 2025"),
-            (datetime(2025, 6, 30), "JUN 30, 2025"),
-            (datetime(2025, 7, 8), "JUL 08, 2025"),
-            (datetime(2025, 8, 12), "AGO 12, 2025"),
-            (datetime(2025, 9, 18), "SEP 18, 2025"),
-            (datetime(2025, 10, 23), "OCT 23, 2025"),
-            (datetime(2025, 11, 28), "NOV 28, 2025"),
-            (datetime(2025, 12, 31), "DIC 31, 2025"),
-        ]
-        
-        for test_date, expected_format in test_cases:
-            products = [
-                Product(
-                    sku="MED-0001",
-                    name="Producto Test",
-                    expiration_date=test_date,
-                    quantity=100,
-                    price=5000.0,
-                    location="A-01-01",
-                    description="Producto de prueba",
-                    product_type="Cadena fría",
-                    provider_id="provider-1"
-                )
-            ]
-            
-            # Llamar al método privado
-            grouped = service._group_products_by_provider(products)
-            product = grouped["provider-1"][0]
-            
-            # Verificar formato de fecha
-            assert product["expiration_date"] == expected_format, \
-                f"Para el mes {test_date.month}, se esperaba '{expected_format}' pero se obtuvo '{product['expiration_date']}'"
+        # Verificar que es un string
+        assert isinstance(product["expiration_date"], str), \
+            "La fecha debe ser un string"
     
     def test_consolidate_products_with_same_provider_name(self):
         """Test que verifica que productos con diferentes provider_id pero mismo nombre de proveedor se consolidan en un solo grupo"""

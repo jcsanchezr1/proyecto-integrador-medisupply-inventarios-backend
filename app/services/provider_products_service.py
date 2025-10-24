@@ -64,40 +64,17 @@ class ProviderProductsService:
         """
         from datetime import datetime
         
-        # Mapeo de meses en español
-        MESES_ES = {
-            1: "ENE", 2: "FEB", 3: "MAR", 4: "ABR",
-            5: "MAY", 6: "JUN", 7: "JUL", 8: "AGO",
-            9: "SEP", 10: "OCT", 11: "NOV", 12: "DIC"
-        }
-        
         products_by_provider = defaultdict(list)
         
         for product in products:
             provider_id = product.provider_id
             
-            # Formatear fecha de expiración
-            expiration_date_formatted = None
-            if product.expiration_date:
-                # Manejar tanto datetime como string
-                date_obj = None
-                if isinstance(product.expiration_date, datetime):
-                    date_obj = product.expiration_date
-                elif isinstance(product.expiration_date, str):
-                    # Si es string, convertir a datetime primero
-                    try:
-                        date_obj = datetime.fromisoformat(product.expiration_date.replace('Z', '+00:00'))
-                        # Convertir a naive si tiene timezone
-                        if date_obj.tzinfo is not None:
-                            date_obj = date_obj.replace(tzinfo=None)
-                    except (ValueError, AttributeError):
-                        # Si no se puede convertir, dejar como None
-                        date_obj = None
-                
-                # Formatear con mes en español
-                if date_obj:
-                    mes_es = MESES_ES.get(date_obj.month, "")
-                    expiration_date_formatted = f"{mes_es} {date_obj.day:02d}, {date_obj.year}"
+            # Manejar fecha de expiración - devolver como viene de BD
+            expiration_date_value = product.expiration_date
+            
+            # Si es datetime, convertir a ISO string para JSON
+            if isinstance(expiration_date_value, datetime):
+                expiration_date_value = expiration_date_value.isoformat()
             
             # Crear objeto de producto con campos adicionales
             product_data = {
@@ -106,7 +83,7 @@ class ProviderProductsService:
                 "quantity": product.quantity,
                 "price": product.price,
                 "photo_url": product.photo_url,
-                "expiration_date": expiration_date_formatted,
+                "expiration_date": expiration_date_value,
                 "description": product.description
             }
             
