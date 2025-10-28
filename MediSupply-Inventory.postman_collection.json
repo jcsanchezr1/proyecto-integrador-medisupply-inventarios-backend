@@ -1,11 +1,11 @@
 {
 	"info": {
-		"_postman_id": "8286f945-177e-4fed-838d-ee156711321b",
+		"_postman_id": "de6ea645-282a-4aa6-b54d-0a2f0f684bbd",
 		"name": "MediSupply Inventory API - Con Datos Aleatorios",
 		"description": "Colección para validar el servicio de inventarios MediSupply con datos aleatorios generados automáticamente",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "2750860",
-		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-8286f945-177e-4fed-838d-ee156711321b?action=share&source=collection_link&creator=2750860"
+		"_collection_link": "https://timecontrol.postman.co/workspace/TCT~e4bf613c-84ca-4624-ad9c-4c8c0259e211/collection/2750860-de6ea645-282a-4aa6-b54d-0a2f0f684bbd?action=share&source=collection_link&creator=2750860"
 	},
 	"item": [
 		{
@@ -165,7 +165,7 @@
 							"    'Metoprolol 50mg'",
 							"];",
 							"",
-							"const tipos = ['Alto valor', 'Seguridad', 'Cadena fría'];",
+							"const tipos = ['Alto valor', 'Seguridad', 'Cadena de frío'];",
 							"const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
 							"",
 							"const nombre = nombres[Math.floor(Math.random() * nombres.length)];",
@@ -1297,6 +1297,110 @@
 			"response": []
 		},
 		{
+			"name": "Obtener Productos Agrupados por Proveedor y Recomendados",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Validar que la respuesta sea exitosa",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Validar que la respuesta sea JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"// Validar estructura de respuesta",
+							"pm.test('Response has success structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"// Validar que data tiene la estructura de grupos",
+							"pm.test('Data has groups structure', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data).to.have.property('groups');",
+							"    pm.expect(response.data.groups).to.be.an('array');",
+							"});",
+							"",
+							"// Validar estructura de cada grupo",
+							"pm.test('Groups have required structure', function () {",
+							"    const response = pm.response.json();",
+							"    if (response.data.groups.length > 0) {",
+							"        const group = response.data.groups[0];",
+							"        pm.expect(group).to.have.property('provider');",
+							"        pm.expect(group).to.have.property('products');",
+							"        pm.expect(group.provider).to.be.a('string');",
+							"        pm.expect(group.products).to.be.an('array');",
+							"    }",
+							"});",
+							"",
+							"// Validar estructura de productos en cada grupo",
+							"pm.test('Products in groups have required fields', function () {",
+							"    const response = pm.response.json();",
+							"    if (response.data.groups.length > 0) {",
+							"        const group = response.data.groups[0];",
+							"        if (group.products.length > 0) {",
+							"            const product = group.products[0];",
+							"            pm.expect(product).to.have.property('name');",
+							"            pm.expect(product).to.have.property('quantity');",
+							"            pm.expect(product).to.have.property('price');",
+							"            pm.expect(product.name).to.be.a('string');",
+							"            pm.expect(product.quantity).to.be.a('number');",
+							"            pm.expect(product.price).to.be.a('number');",
+							"        }",
+							"    }",
+							"});",
+							"",
+							"// Validar que hay al menos un grupo",
+							"pm.test('At least one group exists', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.groups.length).to.be.at.least(1);",
+							"});",
+							"",
+							"console.log('Productos agrupados por proveedor obtenidos exitosamente');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url_local_inventario}}/inventory/providers/products?userId=userId",
+					"host": [
+						"{{url_local_inventario}}"
+					],
+					"path": [
+						"inventory",
+						"providers",
+						"products"
+					],
+					"query": [
+						{
+							"key": "userId",
+							"value": "userId"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Eliminar Producto por ID",
 			"event": [
 				{
@@ -1531,7 +1635,7 @@
 							"    'Metoprolol 50mg'",
 							"];",
 							"",
-							"const tipos = ['Alto valor', 'Seguridad', 'Cadena fría'];",
+							"const tipos = ['Alto valor', 'Seguridad', 'Cadena de frío'];",
 							"const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
 							"",
 							"const nombre = nombres[Math.floor(Math.random() * nombres.length)];",
@@ -1862,7 +1966,7 @@
 						},
 						{
 							"key": "product_type",
-							"value": "Cadena fría",
+							"value": "Cadena de frío",
 							"type": "text"
 						},
 						{
@@ -2010,7 +2114,7 @@
 							"    'Amoxicilina 500mg'",
 							"];",
 							"",
-							"const tipos = ['Alto valor', 'Seguridad', 'Cadena fría'];",
+							"const tipos = ['Alto valor', 'Seguridad', 'Cadena de frío'];",
 							"const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
 							"",
 							"const nombre = nombres[Math.floor(Math.random() * nombres.length)] + ' Sin Imagen';",
