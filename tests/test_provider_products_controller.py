@@ -35,7 +35,7 @@ class TestProviderProductsController:
                 price=5000.0,
                 location="A-01-01",
                 description="Analgésico",
-                product_type="Cadena fría",
+                product_type="Cadena de frío",
                 provider_id="32892e80-fbf9-4c7f-b211-228b3aa43985"
             ),
             Product(

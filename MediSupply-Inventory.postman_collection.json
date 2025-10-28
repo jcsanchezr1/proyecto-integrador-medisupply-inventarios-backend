@@ -165,7 +165,7 @@
 							"    'Metoprolol 50mg'",
 							"];",
 							"",
-							"const tipos = ['Alto valor', 'Seguridad', 'Cadena fría'];",
+							"const tipos = ['Alto valor', 'Seguridad', 'Cadena de frío'];",
 							"const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
 							"",
 							"const nombre = nombres[Math.floor(Math.random() * nombres.length)];",
@@ -1531,7 +1531,7 @@
 							"    'Metoprolol 50mg'",
 							"];",
 							"",
-							"const tipos = ['Alto valor', 'Seguridad', 'Cadena fría'];",
+							"const tipos = ['Alto valor', 'Seguridad', 'Cadena de frío'];",
 							"const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
 							"",
 							"const nombre = nombres[Math.floor(Math.random() * nombres.length)];",
@@ -1862,7 +1862,7 @@
 						},
 						{
 							"key": "product_type",
-							"value": "Cadena fría",
+							"value": "Cadena de frío",
 							"type": "text"
 						},
 						{
@@ -2010,7 +2010,7 @@
 							"    'Amoxicilina 500mg'",
 							"];",
 							"",
-							"const tipos = ['Alto valor', 'Seguridad', 'Cadena fría'];",
+							"const tipos = ['Alto valor', 'Seguridad', 'Cadena de frío'];",
 							"const ubicaciones = ['A-01-01', 'A-01-02', 'A-02-01', 'B-01-01', 'B-02-01', 'C-01-01'];",
 							"",
 							"const nombre = nombres[Math.floor(Math.random() * nombres.length)] + ' Sin Imagen';",
