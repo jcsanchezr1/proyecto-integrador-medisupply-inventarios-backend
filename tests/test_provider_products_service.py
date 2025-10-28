@@ -471,3 +471,333 @@ class TestProviderProductsService:
                 assert "Paracetamol 500mg" in product_names
                 assert "Amoxicilina 500mg" in product_names
                 assert "Insulina Glargina" in product_names
+    
+    def test_add_recommendations_group_with_valid_user_and_specialty(self):
+        """Test agregar grupo de recomendados cuando el usuario existe y tiene specialty"""
+        from app.models.product import Product
+        
+        # Crear productos de prueba con diferentes product_type
+        future_date = datetime.utcnow() + timedelta(days=30)
+        products = [
+            Product(
+                sku="MED-0001",
+                name="Producto Alto Valor 1",
+                expiration_date=future_date,
+                quantity=100,
+                price=5000.0,
+                location="A-01-01",
+                description="Producto de alto valor",
+                product_type="Alto valor",
+                provider_id="provider-1"
+            ),
+            Product(
+                sku="MED-0002",
+                name="Producto Alto Valor 2",
+                expiration_date=future_date,
+                quantity=50,
+                price=8000.0,
+                location="A-01-02",
+                description="Otro producto de alto valor",
+                product_type="Alto valor",
+                provider_id="provider-1"
+            ),
+            Product(
+                sku="MED-0003",
+                name="Producto Seguridad",
+                expiration_date=future_date,
+                quantity=200,
+                price=12000.0,
+                location="B-02-01",
+                description="Producto de seguridad",
+                product_type="Seguridad",
+                provider_id="provider-2"
+            )
+        ]
+        
+        # Asignar IDs a los productos
+        products[0].id = 1
+        products[1].id = 2
+        products[2].id = 3
+        
+        # Grupos existentes
+        existing_groups = [
+            {
+                "provider": "Proveedor 1",
+                "products": []
+            }
+        ]
+        
+        # Mock del servicio de autenticación
+        with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+            auth_instance = Mock()
+            mock_auth.return_value = auth_instance
+            
+            # Simular usuario con specialty "Alto valor"
+            auth_instance.get_user_by_id.return_value = {
+                "id": "user-1",
+                "name": "Test User",
+                "specialty": "Alto valor"
+            }
+            
+            service = ProviderProductsService()
+            result = service._add_recommendations_group(existing_groups, products, "user-1")
+            
+            # Verificar que se agregó el grupo de recomendados
+            assert len(result) == 2  # existing_groups + recomendados
+            assert result[0]["provider"] == "Recomendados"
+            assert len(result[0]["products"]) == 2  # Solo los productos con product_type "Alto valor"
+            
+            # Verificar que los productos recomendados son los correctos
+            recommended_names = [p["name"] for p in result[0]["products"]]
+            assert "Producto Alto Valor 1" in recommended_names
+            assert "Producto Alto Valor 2" in recommended_names
+            assert "Producto Seguridad" not in recommended_names
+    
+    def test_add_recommendations_group_with_nonexistent_user(self):
+        """Test que verifica que no se agrega grupo de recomendados cuando el usuario no existe"""
+        products = []
+        existing_groups = [{"provider": "Proveedor 1", "products": []}]
+        
+        # Mock del servicio de autenticación que retorna None (usuario no existe)
+        with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+            auth_instance = Mock()
+            mock_auth.return_value = auth_instance
+            auth_instance.get_user_by_id.return_value = None
+            
+            service = ProviderProductsService()
+            result = service._add_recommendations_group(existing_groups, products, "nonexistent-user")
+            
+            # Verificar que no se modificó la lista de grupos
+            assert len(result) == 1
+            assert result[0]["provider"] == "Proveedor 1"
+            # No hay grupo de recomendados
+            assert not any(g["provider"] == "Recomendados" for g in result)
+    
+    def test_add_recommendations_group_with_user_without_specialty(self):
+        """Test que verifica que no se agrega grupo de recomendados cuando el usuario no tiene specialty"""
+        products = []
+        existing_groups = [{"provider": "Proveedor 1", "products": []}]
+        
+        # Mock del servicio de autenticación que retorna usuario sin specialty
+        with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+            auth_instance = Mock()
+            mock_auth.return_value = auth_instance
+            auth_instance.get_user_by_id.return_value = {
+                "id": "user-1",
+                "name": "Test User"
+                # Sin campo specialty
+            }
+            
+            service = ProviderProductsService()
+            result = service._add_recommendations_group(existing_groups, products, "user-1")
+            
+            # Verificar que no se modificó la lista de grupos
+            assert len(result) == 1
+            assert result[0]["provider"] == "Proveedor 1"
+    
+    def test_add_recommendations_group_with_no_matching_products(self):
+        """Test cuando no hay productos que coincidan con la specialty del usuario"""
+        future_date = datetime.utcnow() + timedelta(days=30)
+        products = [
+            Product(
+                sku="MED-0001",
+                name="Producto Seguridad",
+                expiration_date=future_date,
+                quantity=100,
+                price=5000.0,
+                location="A-01-01",
+                description="Producto de seguridad",
+                product_type="Seguridad",
+                provider_id="provider-1"
+            )
+        ]
+        products[0].id = 1
+        
+        existing_groups = [{"provider": "Proveedor 1", "products": []}]
+        
+        # Mock del servicio de autenticación con specialty diferente
+        with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+            auth_instance = Mock()
+            mock_auth.return_value = auth_instance
+            auth_instance.get_user_by_id.return_value = {
+                "id": "user-1",
+                "name": "Test User",
+                "specialty": "Alto valor"  # No hay productos con este tipo
+            }
+            
+            service = ProviderProductsService()
+            result = service._add_recommendations_group(existing_groups, products, "user-1")
+            
+            # Verificar que no se agregó el grupo de recomendados
+            assert len(result) == 1
+            assert not any(g["provider"] == "Recomendados" for g in result)
+    
+    def test_add_recommendations_group_limits_to_10_products(self):
+        """Test que verifica que se limita a 10 productos recomendados"""
+        future_date = datetime.utcnow() + timedelta(days=30)
+        
+        # Crear 15 productos con product_type "Alto valor"
+        products = []
+        for i in range(15):
+            product = Product(
+                sku=f"MED-{i:04d}",
+                name=f"Producto Alto Valor {i}",
+                expiration_date=future_date,
+                quantity=100,
+                price=5000.0,
+                location="A-01-01",
+                description=f"Producto {i}",
+                product_type="Alto valor",
+                provider_id="provider-1"
+            )
+            product.id = i + 1
+            products.append(product)
+        
+        existing_groups = [{"provider": "Proveedor 1", "products": []}]
+        
+        # Mock del servicio de autenticación
+        with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+            auth_instance = Mock()
+            mock_auth.return_value = auth_instance
+            auth_instance.get_user_by_id.return_value = {
+                "id": "user-1",
+                "name": "Test User",
+                "specialty": "Alto valor"
+            }
+            
+            service = ProviderProductsService()
+            result = service._add_recommendations_group(existing_groups, products, "user-1")
+            
+            # Verificar que se agregó el grupo de recomendados
+            assert len(result) == 2
+            assert result[0]["provider"] == "Recomendados"
+            
+            # Verificar que solo hay 10 productos (no 15)
+            assert len(result[0]["products"]) == 10
+    
+    def test_add_recommendations_group_with_authenticator_service_error(self):
+        """Test que verifica el manejo de errores del servicio de autenticación"""
+        products = []
+        existing_groups = [{"provider": "Proveedor 1", "products": []}]
+        
+        # Mock del servicio de autenticación que lanza excepción
+        with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+            auth_instance = Mock()
+            mock_auth.return_value = auth_instance
+            auth_instance.get_user_by_id.side_effect = Exception("Error de conexión")
+            
+            service = ProviderProductsService()
+            result = service._add_recommendations_group(existing_groups, products, "user-1")
+            
+            # Verificar que se retorna la lista original sin cambios
+            assert len(result) == 1
+            assert result[0]["provider"] == "Proveedor 1"
+            assert not any(g["provider"] == "Recomendados" for g in result)
+    
+    def test_get_products_grouped_by_provider_with_user_id(self):
+        """Test del método principal con user_id que agrega recomendaciones"""
+        future_date = datetime.utcnow() + timedelta(days=30)
+        
+        # Crear productos con diferentes product_type
+        products = [
+            Product(
+                sku="MED-0001",
+                name="Producto Alto Valor",
+                expiration_date=future_date,
+                quantity=100,
+                price=5000.0,
+                location="A-01-01",
+                description="Producto de alto valor",
+                product_type="Alto valor",
+                provider_id="provider-1"
+            ),
+            Product(
+                sku="MED-0002",
+                name="Producto Seguridad",
+                expiration_date=future_date,
+                quantity=50,
+                price=8000.0,
+                location="A-01-02",
+                description="Producto de seguridad",
+                product_type="Seguridad",
+                provider_id="provider-2"
+            )
+        ]
+        products[0].id = 1
+        products[1].id = 2
+        
+        with patch('app.services.provider_products_service.ProductService') as mock_product:
+            with patch('app.services.provider_products_service.ProviderService') as mock_provider:
+                with patch('app.services.provider_products_service.AuthenticatorService') as mock_auth:
+                    # Configurar mocks
+                    product_service_instance = Mock()
+                    mock_product.return_value = product_service_instance
+                    product_service_instance.get_all_products.return_value = products
+                    
+                    provider_service_instance = Mock()
+                    mock_provider.return_value = provider_service_instance
+                    provider_service_instance.get_providers_batch.return_value = {
+                        "provider-1": Provider(id="provider-1", name="Proveedor 1", email="test1@test.com", phone="123"),
+                        "provider-2": Provider(id="provider-2", name="Proveedor 2", email="test2@test.com", phone="456")
+                    }
+                    
+                    auth_instance = Mock()
+                    mock_auth.return_value = auth_instance
+                    auth_instance.get_user_by_id.return_value = {
+                        "id": "user-1",
+                        "name": "Test User",
+                        "specialty": "Alto valor"
+                    }
+                    
+                    # Ejecutar servicio con user_id
+                    service = ProviderProductsService()
+                    result = service.get_products_grouped_by_provider(user_id="user-1")
+                    
+                    # Verificar que hay grupos
+                    assert len(result["groups"]) >= 1
+                    
+                    # Verificar que el primer grupo es "Recomendados"
+                    assert result["groups"][0]["provider"] == "Recomendados"
+                    
+                    # Verificar que solo hay productos con product_type "Alto valor"
+                    for product in result["groups"][0]["products"]:
+                        assert product["name"] == "Producto Alto Valor"
+    
+    def test_get_products_grouped_by_provider_without_user_id(self):
+        """Test del método principal sin user_id (flujo normal sin recomendaciones)"""
+        future_date = datetime.utcnow() + timedelta(days=30)
+        
+        products = [
+            Product(
+                sku="MED-0001",
+                name="Producto Test",
+                expiration_date=future_date,
+                quantity=100,
+                price=5000.0,
+                location="A-01-01",
+                description="Test",
+                product_type="Alto valor",
+                provider_id="provider-1"
+            )
+        ]
+        products[0].id = 1
+        
+        with patch('app.services.provider_products_service.ProductService') as mock_product:
+            with patch('app.services.provider_products_service.ProviderService') as mock_provider:
+                # Configurar mocks
+                product_service_instance = Mock()
+                mock_product.return_value = product_service_instance
+                product_service_instance.get_all_products.return_value = products
+                
+                provider_service_instance = Mock()
+                mock_provider.return_value = provider_service_instance
+                provider_service_instance.get_providers_batch.return_value = {
+                    "provider-1": Provider(id="provider-1", name="Proveedor 1", email="test@test.com", phone="123")
+                }
+                
+                # Ejecutar servicio sin user_id
+                service = ProviderProductsService()
+                result = service.get_products_grouped_by_provider()
+                
+                # Verificar que no hay grupo de recomendados
+                assert not any(g["provider"] == "Recomendados" for g in result["groups"])
