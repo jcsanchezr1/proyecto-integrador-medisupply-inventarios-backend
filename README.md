@@ -124,7 +124,7 @@ Estructura básica preparada para escalar:
 - **Cantidad**: Entero positivo (1-9999)
 - **Precio**: Numérico positivo en COP
 - **Ubicación**: Formato "P-EE-NN" (Pasillo: A-Z, Estante: 01-99, Nivel: 01-99)
-- **Tipo de producto**: "Alto valor", "Seguridad", "Cadena fría"
+- **Tipo de producto**: "Alto valor", "Seguridad", "Cadena de frío"
 - **Foto**: JPG, PNG, GIF, máximo 5MB (opcional)
 
 ## Almacenamiento de Imágenes

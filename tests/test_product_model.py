@@ -217,7 +217,7 @@ class TestProduct:
     
     def test_validate_product_type_valid(self, valid_product_data):
         """Test: Validar tipo de producto válido"""
-        valid_types = ["Alto valor", "Seguridad", "Cadena fría"]
+        valid_types = ["Alto valor", "Seguridad", "Cadena de frío"]
         
         for product_type in valid_types:
             valid_product_data['product_type'] = product_type
@@ -229,7 +229,7 @@ class TestProduct:
         valid_product_data['product_type'] = 'Tipo inválido'
         product = Product(**valid_product_data)
         
-        with pytest.raises(ValueError, match="El tipo de producto debe ser: Alto valor, Seguridad o Cadena fría"):
+        with pytest.raises(ValueError, match="El tipo de producto debe ser: Alto valor, Seguridad o Cadena de frío"):
             product.validate()
     
     def test_validate_product_type_empty(self, valid_product_data):
