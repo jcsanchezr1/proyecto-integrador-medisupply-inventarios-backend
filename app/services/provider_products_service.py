@@ -1,8 +1,12 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from collections import defaultdict
+import logging
 from app.services.product_service import ProductService
 from app.external.provider_service import ProviderService
+from app.external.authenticator_service import AuthenticatorService
 from app.exceptions.business_logic_error import BusinessLogicError
+
+logger = logging.getLogger(__name__)
 
 
 class ProviderProductsService:
@@ -10,13 +14,17 @@ class ProviderProductsService:
     Servicio para la lógica de negocio de productos agrupados por proveedor
     """
     
-    def __init__(self, product_service=None, provider_service=None):
+    def __init__(self, product_service=None, provider_service=None, authenticator_service=None):
         self.product_service = product_service or ProductService()
         self.provider_service = provider_service or ProviderService()
+        self.authenticator_service = authenticator_service or AuthenticatorService()
     
-    def get_products_grouped_by_provider(self) -> Dict[str, Any]:
+    def get_products_grouped_by_provider(self, user_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Obtiene todos los productos agrupados por proveedor
+        
+        Args:
+            user_id: ID del usuario para obtener recomendaciones (opcional)
         
         Returns:
             Dict[str, Any]: Diccionario con la estructura de respuesta
@@ -43,6 +51,10 @@ class ProviderProductsService:
             
             # Construir respuesta agrupada
             groups = self._build_groups_response(products_by_provider, provider_names)
+            
+            # Si viene user_id, intentar agregar grupo de recomendados
+            if user_id:
+                groups = self._add_recommendations_group(groups, products, user_id)
             
             return {
                 "groups": groups,
@@ -153,3 +165,77 @@ class ProviderProductsService:
             groups.append(group)
         
         return groups
+    
+    def _add_recommendations_group(self, groups: List[Dict[str, Any]], 
+                                   products: List[Any], 
+                                   user_id: str) -> List[Dict[str, Any]]:
+        """
+        Agrega un grupo de recomendados basado en la especialidad del usuario
+        
+        Args:
+            groups: Lista de grupos existentes
+            products: Lista de todos los productos
+            user_id: ID del usuario
+            
+        Returns:
+            List[Dict[str, Any]]: Lista de grupos con recomendados al inicio (si aplica)
+        """
+        try:
+            # Intentar obtener el usuario
+            user = self.authenticator_service.get_user_by_id(user_id)
+            
+            # Si no existe el usuario o no tiene specialty, retornar grupos sin cambios
+            if not user or 'specialty' not in user or not user['specialty']:
+                logger.info(f"Usuario {user_id} no encontrado o sin specialty, retornando grupos normales")
+                return groups
+            
+            specialty = user['specialty']
+            logger.info(f"Usuario encontrado con specialty: {specialty}")
+            
+            # Filtrar productos que coincidan con la specialty (usando product_type)
+            recommended_products = []
+            for product in products:
+                if hasattr(product, 'product_type') and product.product_type == specialty:
+                    # Usar el mismo formato que en _group_products_by_provider
+                    from datetime import datetime
+                    
+                    expiration_date_value = product.expiration_date
+                    if isinstance(expiration_date_value, datetime):
+                        expiration_date_value = expiration_date_value.isoformat()
+                    
+                    product_data = {
+                        "id": product.id,
+                        "name": product.name,
+                        "quantity": product.quantity,
+                        "price": product.price,
+                        "photo_url": product.photo_url,
+                        "expiration_date": expiration_date_value,
+                        "description": product.description
+                    }
+                    recommended_products.append(product_data)
+                    
+                    # Limitar a 10 productos
+                    if len(recommended_products) >= 10:
+                        break
+            
+            # Si no hay productos recomendados, retornar grupos sin cambios
+            if not recommended_products:
+                logger.info(f"No se encontraron productos con specialty {specialty}")
+                return groups
+            
+            # Crear el grupo de recomendados
+            recommendations_group = {
+                "provider": "Recomendados",
+                "products": recommended_products
+            }
+            
+            # Insertar al inicio de la lista de grupos
+            groups.insert(0, recommendations_group)
+            logger.info(f"Grupo de recomendados agregado con {len(recommended_products)} productos")
+            
+            return groups
+            
+        except Exception as e:
+            # Si hay cualquier error, simplemente retornar los grupos sin modificar
+            logger.warning(f"Error al agregar grupo de recomendados: {str(e)}, retornando grupos normales")
+            return groups
